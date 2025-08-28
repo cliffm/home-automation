@@ -1,0 +1,156 @@
+# config.yml - Your optimized Frigate configuration with go2rtc
+
+# go2rtc integration
+go2rtc:
+  streams:
+    doorbell:
+      - rtsps://192.168.1.1:7441/eWHcQD7eiNUISxr2
+    front_door:
+      - rtsps://192.168.1.1:7441/fBclfRbEiu5guBqc
+
+# MQTT (connect to your existing MQTT in home automation stack)
+mqtt:
+  host: mosquitto # Container name from home automation stack
+  port: 1883
+  topic_prefix: frigate
+  client_id: frigate
+  user: "{FRIGATE_MQTT_USER}"
+  password: "{FRIGATE_MQTT_PASSWORD}"
+
+# Database
+database:
+  path: /config/frigate.db
+
+# Detectors (your existing Coral USB)
+detectors:
+  coral:
+    type: edgetpu
+    device: usb
+
+# Hardware acceleration (your existing Intel QuickSync)
+ffmpeg:
+  global_args: -hide_banner -loglevel debug -an
+  hwaccel_args: preset-intel-qsv-h264
+
+# Global detection settings
+detect:
+  max_disappeared: 10
+
+# Snapshots (your existing settings)
+snapshots:
+  enabled: true
+  clean_copy: true
+  timestamp: false
+  bounding_box: false
+  crop: false
+
+# Objects (your existing settings)
+objects:
+  track:
+    - person
+    - dog
+    - car
+  filters:
+    person:
+      min_area: 5000
+      min_score: 0.5
+      threshold: 0.7
+
+# Cameras - optimized with go2rtc
+cameras:
+  doorbell:
+    ffmpeg:
+      inputs:
+        # Primary stream via go2rtc (more efficient)
+        - path: rtsp://127.0.0.1:8554/doorbell
+          roles:
+            - detect
+        # Record stream can be direct or via go2rtc
+        - path: rtsp://127.0.0.1:8554/doorbell
+          roles:
+            - record
+    detect:
+      width: 960
+      height: 720
+      fps: 5
+    motion:
+      mask:
+        - 960,0,960,720,720,720,718,310,0,220,0,0
+    best_image_timeout: 3
+    objects:
+      track:
+        - person
+        - dog
+      filters:
+        person:
+          min_area: 10000
+          max_area: 1000000
+          min_score: 0.5
+          threshold: 0.7
+    snapshots:
+      enabled: true
+      timestamp: false
+      bounding_box: false
+      crop: false
+      retain:
+        default: 14
+    mqtt:
+      enabled: true
+      timestamp: false
+      bounding_box: false
+      crop: false
+      quality: 100
+    record:
+      enabled: true
+      retain:
+        days: 7
+        mode: motion
+
+  front_door:
+    ffmpeg:
+      inputs:
+        # Primary stream via go2rtc
+        - path: rtsp://127.0.0.1:8554/front_door
+          roles:
+            - detect
+        - path: rtsp://127.0.0.1:8554/front_door
+          roles:
+            - record
+    detect:
+      height: 576
+      width: 1024
+      fps: 5
+    motion:
+      mask:
+        - 439,439,355,0,1024,0,1024,576,686,576,685,472
+        - 258,409,97,0,0,0,0,482,108,390
+    best_image_timeout: 3
+    objects:
+      track:
+        - person
+        - dog
+    snapshots:
+      enabled: true
+      timestamp: false
+      bounding_box: false
+      crop: false
+      retain:
+        default: 14
+    mqtt:
+      enabled: true
+      timestamp: false
+      bounding_box: false
+      crop: false
+      quality: 100
+    record:
+      enabled: true
+      retain:
+        days: 7
+        mode: motion
+
+# Version and features (your existing settings)
+version: 0.15-1
+semantic_search:
+  enabled: true
+  reindex: false
+  model_size: small

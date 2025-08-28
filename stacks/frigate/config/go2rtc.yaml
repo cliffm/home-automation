@@ -1,0 +1,28 @@
+# go2rtc.yaml - Configuration for Ubiquiti cameras
+# Place this in your frigate config directory
+
+streams:
+  # Your actual Ubiquiti cameras with go2rtc optimization
+  doorbell:
+    - rtsps://192.168.1.1:7441/eWHcQD7eiNUISxr2
+    - "ffmpeg:doorbell#video=copy#audio=aac"
+
+  front_door:
+    - rtsps://192.168.1.1:7441/fBclfRbEiu5guBqc
+    - "ffmpeg:front_door#video=copy#audio=aac"
+
+# WebRTC configuration for low-latency viewing
+webrtc:
+  candidates:
+    - 192.168.1.146:8555 # Replace with your ha-server2 IP
+    - stun:stun.l.google.com:19302
+
+# API configuration
+api:
+  listen: ":1984"
+
+# Hardware acceleration (if available)
+ffmpeg:
+  global: "-hide_banner -loglevel warning"
+  # Intel QuickSync (if available)
+  # hwaccel: "-hwaccel vaapi -hwaccel_device /dev/dri/renderD128"

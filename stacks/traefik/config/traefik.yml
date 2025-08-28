@@ -1,0 +1,55 @@
+# Traefik Configuration File - /home/cliffm/home-automation/stacks/traefik/config/traefik.yml
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+# Entry Points
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+# Providers
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: traefik
+  file:
+    filename: /etc/traefik/dynamic.yml
+    watch: true
+
+# Certificate Resolvers
+certificatesResolvers:
+  cloudflare:
+    acme:
+      email: cliff.martin@gmail.com
+      storage: /etc/traefik/acme/acme.json
+      dnsChallenge:
+        provider: cloudflare
+        delayBeforeCheck: 0
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"
+
+# API and Dashboard
+api:
+  dashboard: true
+  insecure: true # Only for internal access
+
+# Logging
+log:
+  level: INFO
+
+accessLog:
+  fields:
+    defaultMode: keep
+    names:
+      ClientUsername: drop
+    headers:
+      defaultMode: keep
+      names:
+        User-Agent: redact
+        Authorization: drop
+        Content-Type: keep

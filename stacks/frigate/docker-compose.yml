@@ -1,0 +1,84 @@
+networks:
+  frigate_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+  # Add external home automation network for MQTT communication
+  home_automation:
+    external: true
+    name: home-automation_home_automation
+
+services:
+  go2rtc:
+    container_name: go2rtc
+    image: alexxit/go2rtc:1.9.4
+    restart: unless-stopped
+    volumes:
+      - go2rtc_config:/config
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - frigate_network
+    ports:
+      - "1984:1984"   # go2rtc web interface
+      - "8554:8554"   # RTSP server
+      - "8555:8555/tcp"  # WebRTC/TCP
+      - "8555:8555/udp"  # WebRTC/UDP
+    environment:
+      - TZ=${TIMEZONE:-America/New_York}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:1984/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  frigate:
+    container_name: frigate
+    image: ghcr.io/blakeblackshear/frigate:0.15.0
+    restart: unless-stopped
+    privileged: true
+    shm_size: '2g'
+    devices:
+      - /dev/bus/usb:/dev/bus/usb     # USB Coral
+      - /dev/dri/renderD128:/dev/dri/renderD128  # Intel hardware acceleration
+    volumes:
+      - frigate_config:/config
+      - frigate_media:/media/frigate
+      - /etc/localtime:/etc/localtime:ro
+      # Temporary cache in memory (reduces SSD wear)
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000  # 1GB
+    networks:
+      - frigate_network      # Internal network for go2rtc communication
+      - home_automation      # External network for MQTT communication
+    ports:
+      - "5000:5000"     # Frigate web interface
+      - "8971:8971"     # Frigate go2rtc proxy
+    environment:
+      - TZ=${TIMEZONE:-America/New_York}
+      - FRIGATE_MQTT_USER=${FRIGATE_MQTT_USER:-mqtt_user}
+      - FRIGATE_MQTT_PASSWORD=${FRIGATE_MQTT_PASSWORD:-SiKjY6w2MNLLJpwK7iu7}
+    depends_on:
+      go2rtc:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://ha-server2:5000/api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 3m
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+volumes:
+  frigate_config:
+    driver: local
+  frigate_media:
+    driver: local
+  go2rtc_config:
+    driver: local

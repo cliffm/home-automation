@@ -1,0 +1,243 @@
+networks:
+  home_automation:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+  traefik:
+    name: traefik
+    external: true
+
+services:
+  # PostgreSQL Database for Home Assistant
+  postgres:
+    container_name: postgres
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=homeassistant
+      - POSTGRES_USER=hass
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - TZ=${TIMEZONE:-America/New_York}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - home_automation
+    ports:
+      - "5432:5432" # Expose for management tools
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hass -d homeassistant"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # pgAdmin for PostgreSQL Management
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    restart: unless-stopped
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@martin-ohana.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+      - PGADMIN_DISABLE_POSTFIX=true
+      - TZ=${TIMEZONE:-America/New_York}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - home_automation
+      - traefik
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD", "wget", "-q", "--tries=1", "-O-", "http://localhost/misc/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.martin-ohana.com`)"
+      - "traefik.http.routers.pgadmin.tls=true"
+      - "traefik.http.routers.pgadmin.tls.certresolver=cloudflare"
+      - "traefik.http.routers.pgadmin.entrypoints=web,websecure"
+      - "traefik.http.routers.pgadmin.middlewares=redirect-to-https@docker"
+      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # Home Assistant with PostgreSQL dependency
+  homeassistant:
+    container_name: home-assistant
+    image: ghcr.io/home-assistant/home-assistant:2025.8.3
+    privileged: true
+    restart: unless-stopped
+    volumes:
+      - home_assistant_config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    networks:
+      - home_automation
+      - traefik
+    ports:
+      - "8123:8123" # Keep for direct access during transition
+    environment:
+      - TZ=${TIMEZONE:-America/New_York}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8123/manifest.json"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.homeassistant.rule=Host(`ha.martin-ohana.com`)"
+      - "traefik.http.routers.homeassistant.tls=true"
+      - "traefik.http.routers.homeassistant.tls.certresolver=cloudflare"
+      - "traefik.http.routers.homeassistant.entrypoints=websecure"
+      - "traefik.http.services.homeassistant.loadbalancer.server.port=8123"
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # ZWave-JS-UI with Traefik labels
+  zwave-js-ui:
+    container_name: zwave-js-ui
+    image: zwavejs/zwave-js-ui:11.1.0
+    restart: unless-stopped
+    tty: true
+    stop_signal: SIGINT
+    devices:
+      - "/dev/ttyACM0:/dev/ttyACM0"
+    volumes:
+      - zwave_data:/usr/src/app/store
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - home_automation
+      - traefik
+    ports:
+      - "8091:8091" # Keep for direct access during transition
+      - "3000:3000"
+    environment:
+      - TZ=${TIMEZONE:-America/New_York}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-q",
+          "--tries=1",
+          "-O-",
+          "--header",
+          "Accept: text/plain",
+          "http://localhost:8091/health/zwave",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 3m
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.zwavejs.rule=Host(`zwavejs.martin-ohana.com`)"
+      - "traefik.http.routers.zwavejs.tls=true"
+      - "traefik.http.routers.zwavejs.tls.certresolver=cloudflare"
+      - "traefik.http.routers.zwavejs.entrypoints=websecure"
+      - "traefik.http.services.zwavejs.loadbalancer.server.port=8091"
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  mqtt:
+    container_name: mosquitto
+    image: eclipse-mosquitto:2.0.22
+    restart: unless-stopped
+    volumes:
+      - mosquitto_config:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+    networks:
+      - home_automation
+    ports:
+      - "1883:1883"
+    environment:
+      - TZ=${TIMEZONE:-America/New_York}
+      - MQTT_USER=${MQTT_USER:-admin}
+      - MQTT_PASS=${MQTT_PASS:-password}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mosquitto_pub -h 127.0.0.1 -p 1883 -t 'healthcheck' -m 'test' -q 0 -u ${MQTT_USER:-admin} -P ${MQTT_PASS:-password} || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # Node-RED with Traefik labels
+  node-red:
+    container_name: node-red
+    image: nodered/node-red:4.1.0
+    depends_on:
+      - homeassistant
+    restart: unless-stopped
+    volumes:
+      - node_red_data:/data
+      - /home/cliffm/home-automation/configs/home-assistant:/config:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - home_automation
+      - traefik
+    ports:
+      - "1880:1880" # Keep for direct access during transition
+    environment:
+      - TZ=${TIMEZONE:-America/New_York}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1880/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 3m
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.nodered.rule=Host(`nodered.martin-ohana.com`)"
+      - "traefik.http.routers.nodered.tls=true"
+      - "traefik.http.routers.nodered.tls.certresolver=cloudflare"
+      - "traefik.http.routers.nodered.entrypoints=websecure"
+      - "traefik.http.services.nodered.loadbalancer.server.port=1880"
+      - "com.centurylinklabs.watchtower.enable=true"
+
+volumes:
+  mosquitto_config:
+    driver: local
+  mosquitto_data:
+    driver: local
+  mosquitto_logs:
+    driver: local
+  node_red_data:
+    driver: local
+  zwave_data:
+    driver: local
+  home_assistant_config:
+    driver: local
+  # PostgreSQL volumes
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local

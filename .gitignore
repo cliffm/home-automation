@@ -1,0 +1,97 @@
+# Secrets and credentials
+.env
+*.env
+!*.env.example
+secrets.yaml
+*_cred.json
+*.passwd
+*.key
+*.pem
+*.crt
+
+# Logs and temporary files
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Runtime data
+data/
+logs/
+*.db
+*.sqlite
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# === HOME AUTOMATION CONFIG MANAGEMENT ===
+# Secrets & sensitive data
+**/secrets.yaml
+**/secrets.yml
+**/*password*
+**/*token*
+**/*secret*
+**/*.pem
+**/*.key
+*.passwd
+*.secrets
+
+# Database & runtime files
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.sqlite*
+
+# Logs & temporary files  
+**/*.log
+**/*.log.*
+**/*.fault
+**/logs/
+**/log/
+
+# Media & large data files
+**/clips/
+**/recordings/
+**/media/
+**/snapshots/
+**/backup/
+**/model_cache/
+**/tts/
+
+# Cache & runtime directories
+**/.storage/
+**/.cloud/
+**/.exports
+**/.timeline
+**/.vacuum
+**/.search_stats.json
+**/.jwt_secret
+
+# Home Assistant specific
+configs/home-assistant/.HA_VERSION
+configs/home-assistant/www/
+
+# Frigate specific  
+configs/frigate/frigate.db*
+
+# MQTT data directories
+configs/mqtt/mosquitto/data/
+configs/mqtt/mosquitto/log/
