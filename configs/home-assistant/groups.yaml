@@ -1,0 +1,5 @@
+sitting_room_lamp:
+  name: Sitting Room Lamp
+  entities:
+    - light.sitting_room_lamp_1
+    - light.sitting_room_lamp_2

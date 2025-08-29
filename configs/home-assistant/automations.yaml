@@ -1,0 +1,20 @@
+- id: '1594051256790'
+  alias: Reset Input Booleans at Midnight
+  description: ''
+  trigger:
+  - at: 00:00:00
+    platform: time
+  condition: []
+  action:
+  - data: {}
+    entity_id: input_boolean.coffee_made
+    service: input_boolean.turn_off
+  - data: {}
+    entity_id: input_boolean.dog_fed_morning
+    service: input_boolean.turn_off
+  - data: {}
+    entity_id: input_boolean.dog_fed_evening
+    service: input_boolean.turn_off
+  - data: {}
+    entity_id: input_boolean.dog_walked_today
+    service: input_boolean.turn_off
