@@ -1,0 +1,156 @@
+# Docker Volume Sync Whitelist Configuration
+# This file controls which files are synced from Docker volumes to git repository
+# Patterns support wildcards: * (any characters), ** (recursive directories), ? (single character)
+
+[services.home-assistant]
+# Home Assistant configuration files
+include = [
+    # Core configuration files
+    "configuration.yaml",
+    "automations.yaml", 
+    "scripts.yaml",
+    "scenes.yaml",
+    "groups.yaml",
+    "customize.yaml",
+    "secrets.yaml.example",  # Template only, not actual secrets
+    "ui-lovelace.yaml",
+    "known_devices.yaml",
+    
+    # All YAML files (catch remaining config files)
+    "*.yaml",
+    "*.yml",
+    
+    # Custom integrations and components
+    "blueprints/**/*.yaml",
+    "custom_components/**/*.py",
+    "custom_components/**/*.yaml",
+    "custom_components/**/*.json",
+    "custom_components/**/manifest.json",
+    
+    # Themes and packages
+    "themes/**/*.yaml",
+    "packages/**/*.yaml",
+    "integrations/**/*.yaml",
+    
+    # Essential .storage files (UI config, registries)
+    ".storage/lovelace*",
+    ".storage/core.config_entries",
+    ".storage/core.device_registry", 
+    ".storage/core.entity_registry",
+    ".storage/auth_provider.homeassistant",
+    ".storage/core.area_registry",
+    ".storage/core.restore_state",
+]
+
+exclude = [
+    # Logs and temporary files
+    "home-assistant.log*",
+    "*.log*",
+    "*.pid",
+    "*.json.backup",
+    ".HA_VERSION",
+    "OZW_Log.txt",
+    
+    # Databases
+    "home-assistant_v2.db*", 
+    "*.db",
+    "*.db-*",
+    "*.sqlite*",
+    
+    # Security sensitive files
+    ".storage/auth",
+    ".storage/*token*",
+    "secrets.yaml",  # Never sync actual secrets
+    ".google*",
+    
+    # Cache and temporary directories
+    "tts/**",
+    "deps/**",
+    "__pycache__/**",
+    "*.pyc",
+    ".cloud/**",
+    
+    # Runtime files
+    "*.tmp",
+    "*.cache",
+]
+
+[services.node-red]
+# Node-RED flows and configuration
+include = [
+    # Core files
+    "flows.json",
+    "flows_cred.json.example",  # Template only
+    "settings.js",
+    "package.json",
+    
+    # Custom libraries and modules
+    "lib/**/*.js",
+    "lib/**/*.json",
+    
+    # Static resources
+    "public/**/*",
+]
+
+exclude = [
+    # Credentials and security
+    "flows_cred.json",  # Never sync actual credentials
+    ".config.*.json",
+    ".sessions.json",
+    
+    # Node modules and cache
+    "node_modules/**",
+    ".npm/**",
+    ".node-red-contrib-*/**",  # Downloaded modules
+    
+    # Logs and temporary files
+    "*.log",
+    "*.tmp",
+    "*.cache",
+]
+
+[services.zwave-js-ui]
+# ZWave-JS-UI configuration and data
+include = [
+    # Configuration files
+    "settings.json",
+    "mqtt.json",
+    "store.json",
+    
+    # Device and scene data
+    "scenes.jsonl",
+    "nodes.json",
+    
+    # Custom configurations
+    "custom/**/*.json",
+]
+
+exclude = [
+    # Logs
+    "zwave-js-ui.log*",
+    "*.log*",
+    
+    # Cache and temporary files
+    "*.cache",
+    "cache/**",
+    "sessions/**",
+    "*.tmp",
+    
+    # Network cache files (these are regenerated)
+    "zwavejs_*.json",
+    
+    # Runtime data
+    "*.pid",
+]
+
+# Example of adding a new service:
+# [services.mqtt]
+# include = [
+#     "mosquitto.conf",
+#     "config/**/*.conf",
+# ]
+# exclude = [
+#     "*.log*",
+#     "*.pid",
+#     "data/**",
+# ]
