@@ -22,10 +22,10 @@ include = [
     
     # Custom integrations and components
     "blueprints/**/*.yaml",
-    "custom_components/**/*.py",
-    "custom_components/**/*.yaml",
-    "custom_components/**/*.json",
-    "custom_components/**/manifest.json",
+    # "custom_components/**/*.py",      # Commented out - now excluded below
+    # "custom_components/**/*.yaml",    # Commented out - now excluded below
+    # "custom_components/**/*.json",    # Commented out - now excluded below
+    # "custom_components/**/manifest.json",  # Commented out - now excluded below
     
     # Themes and packages
     "themes/**/*.yaml",
@@ -62,6 +62,9 @@ exclude = [
     ".storage/*token*",
     "secrets.yaml",  # Never sync actual secrets
     ".google*",
+    
+    # Custom components (usually downloaded/installed via HACS)
+    "custom_components/**",
     
     # Cache and temporary directories
     "tts/**",
