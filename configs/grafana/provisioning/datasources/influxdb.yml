@@ -1,0 +1,16 @@
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    user: admin
+    secureJsonData:
+      token: ${INFLUXDB_TOKEN}
+    jsonData:
+      version: Flux
+      organization: homelab
+      defaultBucket: monitoring
+      tlsSkipVerify: false
+    isDefault: true
