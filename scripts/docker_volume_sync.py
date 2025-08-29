@@ -164,19 +164,20 @@ exclude = [
         
     def setup_logging(self):
         """Setup logging configuration"""
+        # Create logs directory if it doesn't exist
+        logs_dir = f'{GIT_REPO_PATH}/logs'
+        os.makedirs(logs_dir, exist_ok=True)
+        
         level = logging.DEBUG if self.verbose else logging.INFO
         logging.basicConfig(
             level=level,
             format='%(asctime)s - %(levelname)s - %(message)s',
             handlers=[
                 logging.StreamHandler(sys.stdout),
-                logging.FileHandler(f'{GIT_REPO_PATH}/logs/volume_sync.log', 'a')
+                logging.FileHandler(f'{logs_dir}/volume_sync.log', 'a')
             ]
         )
         self.logger = logging.getLogger(__name__)
-        
-        # Create logs directory if it doesn't exist
-        os.makedirs(f'{GIT_REPO_PATH}/logs', exist_ok=True)
     
     def get_docker_volume_path(self, volume_name: str) -> str:
         """Get the actual filesystem path of a Docker volume"""
