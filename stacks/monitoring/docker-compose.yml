@@ -57,6 +57,7 @@ services:
     hostname: ha-server2
     restart: unless-stopped
     user: telegraf:119
+    command: ["--config", "/etc/telegraf/telegraf.conf"]   # 👈 force Telegraf to only use your config
     environment:
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
       - INFLUXDB_URL=http://influxdb:8086
@@ -65,6 +66,7 @@ services:
       - HA_TOKEN=${HA_TOKEN}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - PIHOLE_PASSWORD=${PIHOLE_PASSWORD}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
     volumes:
       - /home/cliffm/home-automation/configs/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -76,7 +78,7 @@ services:
     networks:
       - monitoring
       - traefik
-      - home-automation
+      - home_automation   # 👈 so Telegraf can reach mosquitto
     privileged: true
     depends_on:
       - influxdb
@@ -108,7 +110,7 @@ networks:
     name: traefik
   home_automation:
     external: true
-    name: home_automation
+    name: home-automation_home_automation
 
 volumes:
   influxdb_data:
