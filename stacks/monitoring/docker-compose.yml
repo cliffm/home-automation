@@ -20,7 +20,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.influxdb.rule=Host(`influxdb.martin-ohana.com`)"
       - "traefik.http.routers.influxdb.tls=true"
-      - "traefik.http.routers.influxdb.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.influxdb.tls.certresolver=cloudflare"
       - "traefik.http.services.influxdb.loadbalancer.server.port=8086"
     ports:
       - "8086:8086"
@@ -39,8 +39,6 @@ services:
       - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
     volumes:
       - grafana_data:/var/lib/grafana
-      - ../../configs/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ../../configs/grafana/dashboards:/etc/grafana/dashboards:ro
     networks:
       - monitoring
       - traefik
@@ -48,7 +46,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.grafana.rule=Host(`grafana.martin-ohana.com`)"
       - "traefik.http.routers.grafana.tls=true"
-      - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.grafana.tls.certresolver=cloudflare"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
   telegraf:
@@ -64,13 +62,13 @@ services:
       - HA_TOKEN=${HA_TOKEN}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
-      - ../../configs/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /home/cliffm/home-automation/configs/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc:/host/etc:ro
       - /var/run/utmp:/var/run/utmp:ro
-      - ~/.ssh:/root/.ssh:ro
+      - /home/cliffm/.ssh:/root/.ssh:ro
     networks:
       - monitoring
       - traefik
