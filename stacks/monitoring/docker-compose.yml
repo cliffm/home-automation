@@ -50,10 +50,13 @@ services:
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
   telegraf:
-    image: telegraf:1.30-alpine
+    build:
+      context: ../../configs/telegraf
+      dockerfile: Dockerfile
     container_name: telegraf
-    restart: unless-stopped
     hostname: ha-server2
+    restart: unless-stopped
+    user: telegraf:119
     environment:
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
       - INFLUXDB_URL=http://influxdb:8086
@@ -61,6 +64,7 @@ services:
       - INFLUXDB_BUCKET=monitoring
       - HA_TOKEN=${HA_TOKEN}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PIHOLE_PASSWORD=${PIHOLE_PASSWORD}
     volumes:
       - /home/cliffm/home-automation/configs/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
