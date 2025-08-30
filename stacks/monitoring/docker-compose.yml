@@ -76,6 +76,7 @@ services:
     networks:
       - monitoring
       - traefik
+      - home-automation
     privileged: true
     depends_on:
       - influxdb
@@ -105,6 +106,9 @@ networks:
   traefik:
     external: true
     name: traefik
+  home_automation:
+    external: true
+    name: home_automation
 
 volumes:
   influxdb_data:
