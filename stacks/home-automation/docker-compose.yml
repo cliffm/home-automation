@@ -93,6 +93,9 @@ services:
       - traefik
     ports:
       - "8123:8123" # Keep for direct access during transition
+    dns:
+      - 192.168.1.65   # Pi-hole
+      - 1.1.1.1        # fallback (Cloudflare)
     environment:
       - TZ=${TIMEZONE:-America/New_York}
     depends_on:
