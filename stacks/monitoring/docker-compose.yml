@@ -57,7 +57,7 @@ services:
     hostname: ha-server2
     restart: unless-stopped
     user: telegraf:119
-    command: ["--config", "/etc/telegraf/telegraf.conf"]   # 👈 force Telegraf to only use your config
+    command: ["--config", "/etc/telegraf/telegraf.conf"]
     environment:
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
       - INFLUXDB_URL=http://influxdb:8086
@@ -74,11 +74,12 @@ services:
       - /sys:/host/sys:ro
       - /etc:/host/etc:ro
       - /var/run/utmp:/var/run/utmp:ro
-      - /home/cliffm/.ssh:/root/.ssh:ro
+      - /home/cliffm/.ssh/id_rsa_monitoring:/etc/telegraf/keys/id_rsa_monitoring:ro   # 👈 mount only this key
+      - /home/cliffm/home-automation/configs/telegraf/ssh_config_telegraf:/etc/ssh/ssh_config:ro   # 👈 mount SSH config
     networks:
       - monitoring
       - traefik
-      - home_automation   # 👈 so Telegraf can reach mosquitto
+      - home_automation
     privileged: true
     depends_on:
       - influxdb

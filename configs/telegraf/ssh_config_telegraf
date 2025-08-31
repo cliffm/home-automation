@@ -1,0 +1,14 @@
+Host raspberrypi
+    HostName 192.168.1.65
+    User cliffm
+    IdentityFile /etc/telegraf/keys/id_rsa_monitoring
+    StrictHostKeyChecking no
+    ConnectTimeout 10
+
+Host tartlet
+    HostName 192.168.30.25
+    User cliffm
+    IdentityFile /etc/telegraf/keys/id_rsa_monitoring
+    StrictHostKeyChecking no
+    ConnectTimeout 10
+
