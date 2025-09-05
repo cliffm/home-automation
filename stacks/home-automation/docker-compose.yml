@@ -12,7 +12,7 @@ services:
   # PostgreSQL Database for Home Assistant
   postgres:
     container_name: postgres
-    image: postgres:15-alpine
+    image: postgres:17-alpine
     restart: unless-stopped
     environment:
       - POSTGRES_DB=homeassistant
@@ -44,7 +44,7 @@ services:
   # pgAdmin for PostgreSQL Management
   pgadmin:
     container_name: pgadmin
-    image: dpage/pgadmin4:latest
+    image: dpage/pgadmin4:9.7.0
     restart: unless-stopped
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@martin-ohana.com}
@@ -120,7 +120,7 @@ services:
   # ZWave-JS-UI with Traefik labels
   zwave-js-ui:
     container_name: zwave-js-ui
-    image: zwavejs/zwave-js-ui:11.1.0
+    image: zwavejs/zwave-js-ui:11.2.1
     restart: unless-stopped
     tty: true
     stop_signal: SIGINT

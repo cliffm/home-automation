@@ -24,9 +24,9 @@ services:
       - "traefik.http.services.influxdb.loadbalancer.server.port=8086"
     ports:
       - "8086:8086"
-
+  
   grafana:
-    image: grafana/grafana:10.4.2
+    image: grafana/grafana:12.1.0
     container_name: grafana
     restart: unless-stopped
     user: "472:472"
@@ -35,7 +35,7 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SERVER_DOMAIN=grafana.martin-ohana.com
       - GF_SERVER_ROOT_URL=https://grafana.martin-ohana.com
-      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel
+      - GF_PLUGINS_PREINSTALL=grafana-clock-panel,marcusolsson-json-datasource
       - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
     volumes:
       - grafana_data:/var/lib/grafana

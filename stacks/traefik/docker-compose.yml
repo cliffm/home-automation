@@ -1,7 +1,7 @@
 services:
   traefik:
     container_name: traefik
-    image: traefik:v3.0
+    image: traefik:v3.5.1
     restart: unless-stopped
     ports:
       - "80:80"     # HTTP (redirects to HTTPS)
@@ -10,6 +10,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./config/dynamic.yml:/etc/traefik/config/dynamic.yml:ro
       - traefik_certificates:/etc/traefik/acme
     environment:
       - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}

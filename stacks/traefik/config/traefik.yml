@@ -1,7 +1,7 @@
 # Traefik Configuration File - /home/cliffm/home-automation/stacks/traefik/config/traefik.yml
 global:
   checkNewVersion: false
-  sendAnonymousUsage: false
+  sendAnonymousUsage: true
 
 # Entry Points
 entryPoints:
@@ -17,7 +17,7 @@ providers:
     exposedByDefault: false
     network: traefik
   file:
-    filename: /etc/traefik/dynamic.yml
+    filename: /etc/traefik/config/dynamic.yml
     watch: true
 
 # Certificate Resolvers
