@@ -81,7 +81,7 @@ services:
   # Home Assistant with PostgreSQL dependency
   homeassistant:
     container_name: home-assistant
-    image: ghcr.io/home-assistant/home-assistant:2025.8.3
+    image: ghcr.io/home-assistant/home-assistant:2025.9.0
     privileged: true
     restart: unless-stopped
     volumes:
