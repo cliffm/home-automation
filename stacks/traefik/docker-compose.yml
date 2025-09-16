@@ -29,6 +29,19 @@ services:
       - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "com.centurylinklabs.watchtower.enable=true"
+  
+  tar1090-proxy:
+    image: traefik/whoami
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tar1090.rule=Host(`tar1090.martin-ohana.com`)"
+      - "traefik.http.routers.tar1090.tls=true"
+      - "traefik.http.routers.tar1090.tls.certresolver=cloudflare"
+      - "traefik.http.services.tar1090.loadbalancer.server.url=http://192.168.1.109/"
+      - "traefik.http.routers.tar1090.middlewares=tar1090-stripprefix"
+      - "traefik.http.middlewares.tar1090-stripprefix.stripprefix.prefixes=/tar1090"
 
 volumes:
   traefik_certificates:
@@ -36,5 +49,4 @@ volumes:
 
 networks:
   traefik:
-    name: traefik
-    driver: bridge
+    external: true
