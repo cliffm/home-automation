@@ -29,7 +29,11 @@ services:
       - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "com.centurylinklabs.watchtower.enable=true"
-
+      
 volumes:
   traefik_certificates:
     driver: local
+
+networks:
+  traefik:
+    external: true
