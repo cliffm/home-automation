@@ -12,6 +12,9 @@ services:
       - WATCHTOWER_LABEL_ENABLE=true
       # Schedule: Check daily at 3 AM (when you're likely asleep)
       - WATCHTOWER_SCHEDULE=0 0 3 * * *
+      # Docker Hub authentication to avoid rate limits
+      - REPO_USER=${DOCKER_HUB_USERNAME}
+      - REPO_PASS=${DOCKER_HUB_PASSWORD}
       # Email notification settings (uses environment variables for security)
       - WATCHTOWER_NOTIFICATIONS=email
       - WATCHTOWER_NOTIFICATION_EMAIL_FROM=${WATCHTOWER_EMAIL}
@@ -29,6 +32,9 @@ services:
       - WATCHTOWER_LOG_LEVEL=info
       # Rolling restart (update one at a time)
       - WATCHTOWER_ROLLING_RESTART=true
+      # Additional settings to handle registry issues
+      - WATCHTOWER_HTTP_API_UPDATE=true
+      - WATCHTOWER_HTTP_API_PERIODIC_POLLS=true
     healthcheck:
       test: ["CMD", "/watchtower", "--help"]
       interval: 30s
@@ -36,4 +42,4 @@ services:
       retries: 3
       start_period: 10s
     labels:
-      - "com.centurylinklabs.watchtower.enable=false"  # Don't update itself
+      - "com.centurylinklabs.watchtower.enable=false"
