@@ -226,6 +226,59 @@ services:
       - "traefik.http.services.nodered.loadbalancer.server.port=1880"
       - "com.centurylinklabs.watchtower.enable=true"
 
+  # OpenThread Border Router (OTBR) for ZBT-1
+  otbr:
+    container_name: otbr
+    image: ghcr.io/ownbee/hass-otbr-docker
+    restart: unless-stopped
+    privileged: true # don't change this !
+    network_mode: host # don't change this !
+    cap_add:
+      - SYS_ADMIN
+      - NET_ADMIN
+    environment:
+      DEVICE: "/dev/ttyUSB0"
+      BACKBONE_IF: enp89s0
+      FLOW_CONTROL: 1
+      FIREWALL: 1
+      NAT64: 1
+      BAUDRATE: 460800
+      OTBR_REST_PORT: 8081
+      OTBR_WEB_PORT: 8079
+      AUTOFLASH_FIRMWARE: 0
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - otbr_data:/var/lib/thread
+  
+  # Matter Server for Home Assistant
+  matter-server:
+    container_name: matter-server
+    image: ghcr.io/home-assistant-libs/python-matter-server:stable
+    restart: unless-stopped
+    network_mode: host   # Required for mDNS/commissioning
+    privileged: true     # Needed for Thread + BLE
+    environment:
+      - TZ=${TIMEZONE:-America/New_York}
+      - MATTER_SERVER_LOG_LEVEL=info
+    volumes:
+      - matter_data:/data
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro   # required for talking to OTBR / system
+    depends_on:
+      - otbr
+    ports:
+      - "5580:5580"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5580/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
 volumes:
   mosquitto_config:
     driver: local
@@ -243,4 +296,8 @@ volumes:
   postgres_data:
     driver: local
   pgadmin_data:
+    driver: local
+  otbr_data:
+    driver: local
+  matter_data:
     driver: local
