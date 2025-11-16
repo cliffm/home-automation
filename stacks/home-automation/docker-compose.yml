@@ -12,7 +12,7 @@ services:
   # PostgreSQL Database for Home Assistant
   postgres:
     container_name: postgres
-    image: postgres:17-alpine
+    image: postgres:18
     restart: unless-stopped
     environment:
       - POSTGRES_DB=homeassistant
@@ -44,7 +44,7 @@ services:
   # pgAdmin for PostgreSQL Management
   pgadmin:
     container_name: pgadmin
-    image: dpage/pgadmin4:9.7.0
+    image: dpage/pgadmin4:9
     restart: unless-stopped
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@martin-ohana.com}
@@ -81,7 +81,7 @@ services:
   # Home Assistant with PostgreSQL dependency
   homeassistant:
     container_name: home-assistant
-    image: ghcr.io/home-assistant/home-assistant:2025.10.0
+    image: ghcr.io/home-assistant/home-assistant:2025.11.2
     privileged: true
     restart: unless-stopped
     volumes:
