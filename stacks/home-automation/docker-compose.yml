@@ -79,10 +79,12 @@ services:
       - "com.centurylinklabs.watchtower.enable=true"
 
   # Home Assistant with PostgreSQL dependency
+  # Using network_mode: host for full Bluetooth/mDNS/Thread access
   homeassistant:
     container_name: home-assistant
     image: ghcr.io/home-assistant/home-assistant:2025.12.0
     privileged: true
+    network_mode: host
     restart: unless-stopped
     volumes:
       - home_assistant_config:/config
@@ -91,14 +93,6 @@ services:
     cap_add:
       - NET_ADMIN
       - NET_RAW
-    networks:
-      - home_automation
-      - traefik
-    ports:
-      - "8123:8123" # Keep for direct access during transition
-    dns:
-      - 192.168.1.65   # Pi-hole
-      - 1.1.1.1        # fallback (Cloudflare)
     environment:
       - TZ=${TIMEZONE:-America/New_York}
     depends_on:
@@ -112,12 +106,11 @@ services:
       start_period: 40s
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=traefik"
       - "traefik.http.routers.homeassistant.rule=Host(`ha.martin-ohana.com`)"
       - "traefik.http.routers.homeassistant.tls=true"
       - "traefik.http.routers.homeassistant.tls.certresolver=cloudflare"
       - "traefik.http.routers.homeassistant.entrypoints=websecure"
-      - "traefik.http.services.homeassistant.loadbalancer.server.port=8123"
+      - "traefik.http.services.homeassistant.loadbalancer.server.url=http://192.168.1.85:8123"
       - "com.centurylinklabs.watchtower.enable=true"
 
   # ZWave-JS-UI with Traefik labels
@@ -260,7 +253,7 @@ services:
     container_name: matter-server
     image: ghcr.io/home-assistant-libs/python-matter-server:stable
     restart: unless-stopped
-    network_mode: host   # Required for mDNS/commissioning
+    network_mode: host   # Required for mDNS/commissioning - port 5580 available on host
     privileged: true     # Needed for Thread + BLE
     environment:
       - TZ=${TIMEZONE:-America/New_York}
@@ -271,8 +264,6 @@ services:
       - /run/dbus:/run/dbus:ro   # required for talking to OTBR / system
     depends_on:
       - otbr
-    ports:
-      - "5580:5580"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5580/health"]
       interval: 30s
@@ -304,3 +295,4 @@ volumes:
     driver: local
   matter_data:
     driver: local
+
