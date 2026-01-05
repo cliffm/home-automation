@@ -4,10 +4,12 @@ networks:
     ipam:
       config:
         - subnet: 172.25.0.0/16
-  # Add external home automation network for MQTT communication
   home_automation:
     external: true
     name: home-automation_home_automation
+  traefik:
+    external: true
+    name: traefik
 
 services:
   go2rtc:
@@ -37,12 +39,11 @@ services:
 
   frigate:
     container_name: frigate
-    image: ghcr.io/blakeblackshear/frigate:0.15.0
+    image: ghcr.io/blakeblackshear/frigate:0.16.3
     restart: unless-stopped
     privileged: true
     shm_size: '2g'
     devices:
-      - /dev/bus/usb:/dev/bus/usb     # USB Coral
       - /dev/dri/renderD128:/dev/dri/renderD128  # Intel hardware acceleration
     volumes:
       - frigate_config:/config
@@ -56,6 +57,7 @@ services:
     networks:
       - frigate_network      # Internal network for go2rtc communication
       - home_automation      # External network for MQTT communication
+      - traefik
     ports:
       - "5000:5000"     # Frigate web interface
       - "8971:8971"     # Frigate go2rtc proxy
@@ -75,6 +77,13 @@ services:
       start_period: 3m
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.frigate.rule=Host(`frigate.martin-ohana.com`)"
+      - "traefik.http.routers.frigate.tls=true"
+      - "traefik.http.routers.frigate.tls.certresolver=cloudflare"
+      - "traefik.http.routers.frigate.entrypoints=websecure"
+      - "traefik.http.services.frigate.loadbalancer.server.port=5000"
 
 volumes:
   frigate_config:
