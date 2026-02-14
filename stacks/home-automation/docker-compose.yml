@@ -82,7 +82,7 @@ services:
   # Using network_mode: host for full Bluetooth/mDNS/Thread access
   homeassistant:
     container_name: home-assistant
-    image: ghcr.io/home-assistant/home-assistant:2025.12.0
+    image: ghcr.io/home-assistant/home-assistant:2026.2.2
     privileged: true
     network_mode: host
     restart: unless-stopped
@@ -116,7 +116,7 @@ services:
   # ZWave-JS-UI with Traefik labels
   zwave-js-ui:
     container_name: zwave-js-ui
-    image: zwavejs/zwave-js-ui:11.3
+    image: zwavejs/zwave-js-ui:11.9
     restart: unless-stopped
     tty: true
     stop_signal: SIGINT
@@ -191,7 +191,7 @@ services:
   # Node-RED with Traefik labels
   node-red:
     container_name: node-red
-    image: nodered/node-red:4.1.2
+    image: nodered/node-red:4.1.5
     depends_on:
       - homeassistant
     restart: unless-stopped
