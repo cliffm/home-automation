@@ -1,6 +1,6 @@
 services:
   influxdb:
-    image: influxdb:2.7-alpine
+    image: influxdb:2.7.12-alpine
     container_name: influxdb
     restart: unless-stopped
     environment:
@@ -26,7 +26,7 @@ services:
       - "8086:8086"
   
   grafana:
-    image: grafana/grafana:12.1.0
+    image: grafana/grafana:12.1.7
     container_name: grafana
     restart: unless-stopped
     user: "472:472"

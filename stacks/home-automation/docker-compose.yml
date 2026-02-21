@@ -12,7 +12,7 @@ services:
   # PostgreSQL Database for Home Assistant
   postgres:
     container_name: postgres
-    image: postgres:18
+    image: postgres:18.2
     restart: unless-stopped
     environment:
       - POSTGRES_DB=homeassistant
@@ -44,7 +44,7 @@ services:
   # pgAdmin for PostgreSQL Management
   pgadmin:
     container_name: pgadmin
-    image: dpage/pgadmin4:9
+    image: dpage/pgadmin4:9.12
     restart: unless-stopped
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@martin-ohana.com}
@@ -82,7 +82,7 @@ services:
   # Using network_mode: host for full Bluetooth/mDNS/Thread access
   homeassistant:
     container_name: home-assistant
-    image: ghcr.io/home-assistant/home-assistant:2026.2.2
+    image: ghcr.io/home-assistant/home-assistant:2026.2.3
     privileged: true
     network_mode: host
     restart: unless-stopped
@@ -116,7 +116,7 @@ services:
   # ZWave-JS-UI with Traefik labels
   zwave-js-ui:
     container_name: zwave-js-ui
-    image: zwavejs/zwave-js-ui:11.9
+    image: zwavejs/zwave-js-ui:11.12.0
     restart: unless-stopped
     tty: true
     stop_signal: SIGINT
@@ -161,7 +161,7 @@ services:
 
   mqtt:
     container_name: mosquitto
-    image: eclipse-mosquitto:2.0.22
+    image: eclipse-mosquitto:2.1.2-alpine
     restart: unless-stopped
     volumes:
       - mosquitto_config:/mosquitto/config
@@ -265,7 +265,7 @@ services:
     depends_on:
       - otbr
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5580/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5580/info"]
       interval: 30s
       timeout: 10s
       retries: 5
