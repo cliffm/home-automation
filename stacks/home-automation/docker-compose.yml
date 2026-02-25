@@ -26,7 +26,7 @@ services:
     networks:
       - home_automation
     ports:
-      - "5432:5432" # Expose for management tools
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U hass -d homeassistant"]
       interval: 30s
@@ -61,8 +61,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test:
-        ["CMD", "wget", "-q", "--tries=1", "-O-", "http://localhost/misc/ping"]
+      test: ["CMD", "wget", "-q", "--tries=1", "-O-", "http://localhost/misc/ping"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -74,7 +73,7 @@ services:
       - "traefik.http.routers.pgadmin.tls=true"
       - "traefik.http.routers.pgadmin.tls.certresolver=cloudflare"
       - "traefik.http.routers.pgadmin.entrypoints=web,websecure"
-      - "traefik.http.routers.pgadmin.middlewares=redirect-to-https@docker"
+      - "traefik.http.routers.pgadmin.middlewares=redirect-to-https@docker,local-only@file"
       - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -110,6 +109,7 @@ services:
       - "traefik.http.routers.homeassistant.tls=true"
       - "traefik.http.routers.homeassistant.tls.certresolver=cloudflare"
       - "traefik.http.routers.homeassistant.entrypoints=websecure"
+      - "traefik.http.routers.homeassistant.middlewares=local-only@file"
       - "traefik.http.services.homeassistant.loadbalancer.server.url=http://192.168.1.85:8123"
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -129,7 +129,7 @@ services:
       - home_automation
       - traefik
     ports:
-      - "8091:8091" # Keep for direct access during transition
+      - "8091:8091"
       - "3000:3000"
     environment:
       - TZ=${TIMEZONE:-America/New_York}
@@ -156,6 +156,7 @@ services:
       - "traefik.http.routers.zwavejs.tls=true"
       - "traefik.http.routers.zwavejs.tls.certresolver=cloudflare"
       - "traefik.http.routers.zwavejs.entrypoints=websecure"
+      - "traefik.http.routers.zwavejs.middlewares=local-only@file"
       - "traefik.http.services.zwavejs.loadbalancer.server.port=8091"
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -203,7 +204,7 @@ services:
       - home_automation
       - traefik
     ports:
-      - "1880:1880" # Keep for direct access during transition
+      - "1880:1880"
     environment:
       - TZ=${TIMEZONE:-America/New_York}
     healthcheck:
@@ -219,16 +220,35 @@ services:
       - "traefik.http.routers.nodered.tls=true"
       - "traefik.http.routers.nodered.tls.certresolver=cloudflare"
       - "traefik.http.routers.nodered.entrypoints=websecure"
+      - "traefik.http.routers.nodered.middlewares=local-only@file"
       - "traefik.http.services.nodered.loadbalancer.server.port=1880"
       - "com.centurylinklabs.watchtower.enable=true"
+
+  cloudflare-ddns:
+    image: favonia/cloudflare-ddns:1.15.0
+    container_name: cloudflare-ddns
+    restart: unless-stopped
+    network_mode: host
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - DOMAINS=vaultwarden.martin-ohana.com
+      - PROXIED=true
+      - IP6_PROVIDER=none
+      - UPDATE_CRON=@every 5m
+      - TZ=${TIMEZONE:-America/New_York}
 
   # OpenThread Border Router (OTBR) for ZBT-1
   otbr:
     container_name: otbr
     image: ghcr.io/ownbee/hass-otbr-docker
     restart: unless-stopped
-    privileged: true # don't change this !
-    network_mode: host # don't change this !
+    privileged: true
+    network_mode: host
     cap_add:
       - SYS_ADMIN
       - NET_ADMIN
@@ -247,21 +267,21 @@ services:
       - /dev/net/tun:/dev/net/tun
     volumes:
       - otbr_data:/var/lib/thread
-  
+
   # Matter Server for Home Assistant
   matter-server:
     container_name: matter-server
     image: ghcr.io/home-assistant-libs/python-matter-server:stable
     restart: unless-stopped
-    network_mode: host   # Required for mDNS/commissioning - port 5580 available on host
-    privileged: true     # Needed for Thread + BLE
+    network_mode: host
+    privileged: true
     environment:
       - TZ=${TIMEZONE:-America/New_York}
       - MATTER_SERVER_LOG_LEVEL=info
     volumes:
       - matter_data:/data
       - /etc/localtime:/etc/localtime:ro
-      - /run/dbus:/run/dbus:ro   # required for talking to OTBR / system
+      - /run/dbus:/run/dbus:ro
     depends_on:
       - otbr
     healthcheck:
@@ -286,7 +306,6 @@ volumes:
     driver: local
   home_assistant_config:
     driver: local
-  # PostgreSQL volumes
   postgres_data:
     driver: local
   pgadmin_data:
@@ -295,4 +314,3 @@ volumes:
     driver: local
   matter_data:
     driver: local
-

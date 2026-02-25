@@ -16,25 +16,25 @@ services:
       - portainer_data:/data
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /etc/localtime:/etc/localtime:ro
-      - /:/host:ro  # Host filesystem access (equivalent to -v /:/host)
+      - /:/host:ro
     networks:
       - portainer_network
       - traefik
     ports:
-      - "8000:8000"   # Portainer Agent communication
-      - "9000:9000"   # HTTP port for Traefik backend (internal network only via UFW)
-      - "127.0.0.1:9443:9443"   # HTTPS port for direct access fallback
+      - "8000:8000"
+      - "9000:9000"
+      - "127.0.0.1:9443:9443"
     environment:
       - TZ=${TIMEZONE:-America/New_York}
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
-      # Traefik labels
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.portainer.rule=Host(`portainer.martin-ohana.com`)"
       - "traefik.http.routers.portainer.entrypoints=websecure"
       - "traefik.http.routers.portainer.tls=true"
       - "traefik.http.routers.portainer.tls.certresolver=cloudflare"
+      - "traefik.http.routers.portainer.middlewares=local-only@file"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
 
   portainer-agent:
@@ -48,7 +48,7 @@ services:
     networks:
       - portainer_network
     ports:
-      - "9001:9001"   # Agent communication port
+      - "9001:9001"
     environment:
       - TZ=${TIMEZONE:-America/New_York}
       - AGENT_CLUSTER_ADDR=portainer-agent

@@ -21,10 +21,11 @@ services:
       - "traefik.http.routers.influxdb.rule=Host(`influxdb.martin-ohana.com`)"
       - "traefik.http.routers.influxdb.tls=true"
       - "traefik.http.routers.influxdb.tls.certresolver=cloudflare"
+      - "traefik.http.routers.influxdb.middlewares=local-only@file"
       - "traefik.http.services.influxdb.loadbalancer.server.port=8086"
     ports:
       - "8086:8086"
-  
+
   grafana:
     image: grafana/grafana:12.1.7
     container_name: grafana
@@ -47,6 +48,7 @@ services:
       - "traefik.http.routers.grafana.rule=Host(`grafana.martin-ohana.com`)"
       - "traefik.http.routers.grafana.tls=true"
       - "traefik.http.routers.grafana.tls.certresolver=cloudflare"
+      - "traefik.http.routers.grafana.middlewares=local-only@file"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
   telegraf:
@@ -74,8 +76,8 @@ services:
       - /sys:/host/sys:ro
       - /etc:/host/etc:ro
       - /var/run/utmp:/var/run/utmp:ro
-      - /home/cliffm/.ssh/id_rsa_monitoring:/etc/telegraf/keys/id_rsa_monitoring:ro   # 👈 mount only this key
-      - /home/cliffm/home-automation/configs/telegraf/ssh_config_telegraf:/etc/ssh/ssh_config:ro   # 👈 mount SSH config
+      - /home/cliffm/.ssh/id_rsa_monitoring:/etc/telegraf/keys/id_rsa_monitoring:ro
+      - /home/cliffm/home-automation/configs/telegraf/ssh_config_telegraf:/etc/ssh/ssh_config:ro
     networks:
       - monitoring
       - traefik
@@ -120,4 +122,3 @@ volumes:
     name: influxdb_config
   grafana_data:
     name: grafana_data
-

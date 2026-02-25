@@ -22,10 +22,10 @@ services:
     networks:
       - frigate_network
     ports:
-      - "1984:1984"   # go2rtc web interface
-      - "8554:8554"   # RTSP server
-      - "8555:8555/tcp"  # WebRTC/TCP
-      - "8555:8555/udp"  # WebRTC/UDP
+      - "1984:1984"
+      - "8554:8554"
+      - "8555:8555/tcp"
+      - "8555:8555/udp"
     environment:
       - TZ=${TIMEZONE:-America/New_York}
     healthcheck:
@@ -44,23 +44,22 @@ services:
     privileged: true
     shm_size: '2g'
     devices:
-      - /dev/dri/renderD128:/dev/dri/renderD128  # Intel hardware acceleration
+      - /dev/dri/renderD128:/dev/dri/renderD128
     volumes:
       - frigate_config:/config
       - frigate_media:/media/frigate
       - /etc/localtime:/etc/localtime:ro
-      # Temporary cache in memory (reduces SSD wear)
       - type: tmpfs
         target: /tmp/cache
         tmpfs:
-          size: 1000000000  # 1GB
+          size: 1000000000
     networks:
-      - frigate_network      # Internal network for go2rtc communication
-      - home_automation      # External network for MQTT communication
+      - frigate_network
+      - home_automation
       - traefik
     ports:
-      - "5000:5000"     # Frigate web interface
-      - "8971:8971"     # Frigate go2rtc proxy
+      - "5000:5000"
+      - "8971:8971"
     environment:
       - TZ=${TIMEZONE:-America/New_York}
       - FRIGATE_MQTT_USER=${FRIGATE_MQTT_USER:-mqtt_user}
@@ -70,7 +69,6 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "pgrep -f 'ffmpeg' > /dev/null && pgrep -f 'frigate' > /dev/null"]
-      #test: ["CMD", "curl", "-f", "http://ha-server2:5000/api/version"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -83,6 +81,7 @@ services:
       - "traefik.http.routers.frigate.tls=true"
       - "traefik.http.routers.frigate.tls.certresolver=cloudflare"
       - "traefik.http.routers.frigate.entrypoints=websecure"
+      - "traefik.http.routers.frigate.middlewares=local-only@file"
       - "traefik.http.services.frigate.loadbalancer.server.port=5000"
 
 volumes:
