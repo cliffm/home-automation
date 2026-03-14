@@ -81,7 +81,7 @@ services:
   # Using network_mode: host for full Bluetooth/mDNS/Thread access
   homeassistant:
     container_name: home-assistant
-    image: ghcr.io/home-assistant/home-assistant:2026.2.3
+    image: ghcr.io/home-assistant/home-assistant:2026.3.0
     privileged: true
     network_mode: host
     restart: unless-stopped
@@ -238,6 +238,7 @@ services:
       - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
       - DOMAINS=vaultwarden.martin-ohana.com
       - PROXIED=true
+      - IP4_PROVIDER=url:https://api4.ipify.org
       - IP6_PROVIDER=none
       - UPDATE_CRON=@every 5m
       - TZ=${TIMEZONE:-America/New_York}
