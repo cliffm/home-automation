@@ -224,6 +224,25 @@ services:
       - "traefik.http.services.nodered.loadbalancer.server.port=1880"
       - "com.centurylinklabs.watchtower.enable=true"
 
+  esphome:
+    image: ghcr.io/esphome/esphome:latest
+    container_name: esphome
+    volumes:
+      - esphome_config:/config
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - ESPHOME_DASHBOARD_USE_PING=true
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.esphome.rule=Host(`esphome.martin-ohana.com`)"
+      - "traefik.http.routers.esphome.entrypoints=websecure"
+      - "traefik.http.routers.esphome.tls.certresolver=cloudflare"
+      - "traefik.http.routers.esphome.middlewares=local-only@file"
+      - "traefik.http.services.esphome.loadbalancer.server.port=6052"
+
   cloudflare-ddns:
     image: favonia/cloudflare-ddns:1.15.0
     container_name: cloudflare-ddns
@@ -314,4 +333,6 @@ volumes:
   otbr_data:
     driver: local
   matter_data:
+    driver: local
+  esphome_config:
     driver: local
