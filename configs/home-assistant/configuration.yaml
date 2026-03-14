@@ -1,118 +1,40 @@
-# Loads default set of integrations. Do not remove.
+# =============================================================================
+# HOME ASSISTANT CONFIGURATION
+# Enterprise Home Automation Infrastructure
+# Last Updated: September 2025
+# =============================================================================
+
+# =============================================================================
+# CORE INTEGRATIONS
+# =============================================================================
+
 default_config:
 
-# Text to speech
 tts:
   - platform: google_translate
-
-input_boolean:
-  vacation_mode:
-    name: Vacation Mode
-    icon: mdi:wallet-travel
-  front_door_autolock:
-    name: Front Door Auto-Lock
-    icon: mdi:lock-clock
-  front_door_snapshot:
-    name: Front Door Snapshot
-    icon: mdi:camera
-  frigate_notifications:
-    name: "Frigate Notifications Enabled"
-    icon: mdi:camera-account
-  guest_mode:
-    name: Guests Visiting
-    icon: mdi:account-circle
-  cameron_mode:
-    name: Cameron Visiting
-    icon: mdi:account-circle
-  coffee_made:
-    name: Coffee Kettle Started Today
-    icon: mdi:coffee
-  dog_fed_morning:
-    name: Dog fed - Morning
-  dog_fed_evening:
-    name: Dog fed - Evening
-  dog_walked_today:
-    name: Dog walked today
 
 wake_on_lan:
 
 notify:
 
-mqtt:
-  sensor:
-    - name: "Dog Fed Morning"
-      icon: mdi:dog
-      state_topic: "dog/fed/morning"
-      value_template: >-
-        {% if value != "" %}
-          Fed at {{ value }}
-        {% else %}
-          Not fed
-        {% endif %}
-    - name: "Dog Fed Evening"
-      icon: mdi:dog
-      state_topic: "dog/fed/evening"
-      value_template: >-
-        {% if value != "" %}
-          Fed at {{ value }}
-        {% else %}
-          Not fed
-        {% endif %}
-    - name: "Dog Walked Morning"
-      icon: mdi:dog-side
-      state_topic: "dog/walked/morning"
-      value_template: >-
-        {% if value != "" %}
-          Walked at {{ value }}
-        {% else %}
-          Not walked
-        {% endif %}
-    - name: "Dog Walked Evening"
-      icon: mdi:dog-side
-      state_topic: "dog/walked/evening"
-      value_template: >-
-        {% if value != "" %}
-          Walked at {{ value }}
-        {% else %}
-          Not walked
-        {% endif %}
-
-sensor:
-  - platform: statistics
-    name: "Average Bathroom Humidity"
-    entity_id: sensor.bathroom_sensor_humidity
-    state_characteristic: mean
-    sampling_size: 3600
-    max_age:
-      hours: 24
-
-switch:
-  - platform: rest
-    name: "Stagg Kettle"
-    resource: http://tartlet:5000/kettle
-    body_on: '{"active": "true"}'
-    body_off: '{"active": "false"}'
-    is_on_template: "{{ value_json.is_active }}"
-    headers:
-      Content-Type: application/json
-      Authorization: !secret stagg_kettle_token
+# =============================================================================
+# HTTP CONFIGURATION
+# =============================================================================
 
 http:
   use_x_forwarded_for: true
   trusted_proxies:
-    - 172.18.0.0/16    # Docker network (Traefik is at 172.18.0.x)
-    - 172.20.0.0/16    # Home automation network
-    - 172.16.0.0/12    # Additional Docker networks
-    - 192.168.1.85     # ha-server2 IP
+    - 172.18.0.0/16
+    - 172.20.0.0/16
+    - 172.16.0.0/12
+    - 192.168.1.85
     - 127.0.0.1
     - ::1
 
-group: !include groups.yaml
-automation: !include automations.yaml
-script: !include scripts.yaml
-scene: !include scenes.yaml
+# =============================================================================
+# DATABASE
+# =============================================================================
 
-# PostgreSQL Database Configuration
 recorder:
   db_url: !secret postgres_db_url
   db_max_retries: 3
@@ -134,6 +56,7 @@ recorder:
       - automation
       - script
       - scene
+      - input_boolean
   exclude:
     domains:
       - updater
@@ -142,3 +65,162 @@ recorder:
       - sensor.time
       - sensor.date
       - sensor.uptime
+
+# =============================================================================
+# INPUT HELPERS
+# =============================================================================
+
+input_boolean:
+  vacation_mode:
+    name: Vacation Mode
+    icon: mdi:wallet-travel
+
+  guest_mode:
+    name: Guests Visiting
+    icon: mdi:account-circle
+
+  cameron_mode:
+    name: Cameron Visiting
+    icon: mdi:account-circle
+
+  front_door_autolock:
+    name: Front Door Auto-Lock
+    icon: mdi:lock-clock
+
+  front_door_snapshot:
+    name: Front Door Snapshot
+    icon: mdi:camera-account
+
+  coffee_made:
+    name: Coffee Kettle Started Today
+    icon: mdi:coffee
+
+# =============================================================================
+# MQTT (NEW STYLE)
+# =============================================================================
+
+mqtt:
+  sensor:
+    # -----------------------------------------------------------------------
+    # Dog Care Sensors – Timestamp (Primary Data)
+    # -----------------------------------------------------------------------
+    - name: "Dog Fed Morning"
+      state_topic: "dog/fed/morning"
+      device_class: timestamp
+      value_template: >
+        {% if value not in ['', None] %}
+          {{ value }}
+        {% else %}
+          {{ None }}
+        {% endif %}
+      icon: mdi:dog
+    - name: "Dog Fed Evening"
+      state_topic: "dog/fed/evening"
+      device_class: timestamp
+      value_template: >
+        {% if value not in ['', None] %}
+          {{ value }}
+        {% else %}
+          {{ None }}
+        {% endif %}
+      icon: mdi:dog
+
+    # -----------------------------------------------------------------------
+    # RTL_433 Sensors
+    # -----------------------------------------------------------------------
+    - name: "Freezer Temperature"
+      icon: mdi:snowflake-thermometer
+      state_topic: "rtl_433/tartlet"
+      unit_of_measurement: "°F"
+      device_class: temperature
+      state_class: measurement
+      value_template: >-
+        {% set data = value_json %}
+        {% if data.model == "Acurite-986" and data.channel == "2F" %}
+          {{ "%.1f" | format(data.temperature_C | float * 9/5 + 32) }}
+        {% endif %}
+      json_attributes_topic: "rtl_433/tartlet"
+      json_attributes_template: >-
+        {% set data = value_json %}
+        {% if data.model == "Acurite-986" and data.channel == "2F" %}
+          {{
+            {
+              "battery_ok": data.battery_ok,
+              "channel": data.channel,
+              "last_seen": data.time,
+              "device_model": data.model,
+              "device_id": data.id
+            } | tojson
+          }}
+        {% else %}
+          {}
+        {% endif %}
+
+    - name: "Refrigerator Temperature"
+      icon: mdi:fridge-outline
+      state_topic: "rtl_433/tartlet"
+      unit_of_measurement: "°F"
+      device_class: temperature
+      state_class: measurement
+      value_template: >-
+        {% set data = value_json %}
+        {% if data.model == "Acurite-986" and data.channel == "1R" %}
+          {{ "%.1f" | format(data.temperature_C | float * 9/5 + 32) }}
+        {% endif %}
+      json_attributes_topic: "rtl_433/tartlet"
+      json_attributes_template: >-
+        {% set data = value_json %}
+        {% if data.model == "Acurite-986" and data.channel == "1R" %}
+          {{
+            {
+              "battery_ok": data.battery_ok,
+              "channel": data.channel,
+              "last_seen": data.time,
+              "device_model": data.model,
+              "device_id": data.id
+            } | tojson
+          }}
+        {% else %}
+          {}
+        {% endif %}
+
+  binary_sensor:
+    - name: "Dog Fed Morning"
+      state_topic: "dog/fed/morning"
+      value_template: >
+        {% if value not in ['', None] %}
+          ON
+        {% else %}
+          OFF
+        {% endif %}
+
+    - name: "Dog Fed Evening"
+      state_topic: "dog/fed/evening"
+      value_template: >
+        {% if value not in ['', None] %}
+          ON
+        {% else %}
+          OFF
+        {% endif %}
+
+# =============================================================================
+# NON-MQTT SENSORS
+# =============================================================================
+
+sensor:
+  - platform: statistics
+    name: "Average Bathroom Humidity"
+    entity_id: sensor.bathroom_sensor_humidity
+    state_characteristic: mean
+    sampling_size: 3600
+    max_age:
+      hours: 24
+
+# =============================================================================
+# EXTERNAL FILES
+# =============================================================================
+
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
