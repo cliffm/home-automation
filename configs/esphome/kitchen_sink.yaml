@@ -1,0 +1,50 @@
+esphome:
+  name: kitchen-sink-presence
+  friendly_name: Kitchen Sink Presence
+esp32:
+  board: seeed_xiao_esp32c6
+  framework:
+    type: esp-idf
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  use_address: 192.168.30.43
+api:
+  encryption:
+    key: !secret api_encryption_key
+ota:
+  - platform: esphome
+    password: !secret ota_password
+logger:
+  level: INFO
+i2c:
+  sda: GPIO22
+  scl: GPIO23
+  scan: true
+  frequency: 50kHz
+sensor:
+  - platform: vl53l0x
+    name: "VL53L0x Distance"
+    id: distance_sensor
+    address: 0x29
+    update_interval: 1s
+    long_range: true
+    filters:
+      - lambda: |-
+          if (x < 0.35 || x > 2.0) return {};
+          return x;
+      - median:
+          window_size: 3
+
+binary_sensor:
+  - platform: template
+    name: "Presence Detected"
+    lambda: |-
+      if (id(distance_sensor).state < 1.0) {
+        return true;
+      } else {
+        return false;
+      }
+    filters:
+      - delayed_on: 1s    # bumped from 500ms - requires sustained reading
+      - delayed_off: 10s
