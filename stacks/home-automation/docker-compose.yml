@@ -44,7 +44,7 @@ services:
   # pgAdmin for PostgreSQL Management
   pgadmin:
     container_name: pgadmin
-    image: dpage/pgadmin4:9.12
+    image: dpage/pgadmin4:9.13.0
     restart: unless-stopped
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@martin-ohana.com}
@@ -81,7 +81,7 @@ services:
   # Using network_mode: host for full Bluetooth/mDNS/Thread access
   homeassistant:
     container_name: home-assistant
-    image: ghcr.io/home-assistant/home-assistant:2026.3.0
+    image: ghcr.io/home-assistant/home-assistant:2026.3.3
     privileged: true
     network_mode: host
     restart: unless-stopped
@@ -116,7 +116,7 @@ services:
   # ZWave-JS-UI with Traefik labels
   zwave-js-ui:
     container_name: zwave-js-ui
-    image: zwavejs/zwave-js-ui:11.12.0
+    image: zwavejs/zwave-js-ui:11.15.0
     restart: unless-stopped
     tty: true
     stop_signal: SIGINT
@@ -192,7 +192,7 @@ services:
   # Node-RED with Traefik labels
   node-red:
     container_name: node-red
-    image: nodered/node-red:4.1.5
+    image: nodered/node-red:4.1.7
     depends_on:
       - homeassistant
     restart: unless-stopped
@@ -244,7 +244,7 @@ services:
       - "traefik.http.services.esphome.loadbalancer.server.port=6052"
 
   cloudflare-ddns:
-    image: favonia/cloudflare-ddns:1.15.0
+    image: favonia/cloudflare-ddns:1.15.1
     container_name: cloudflare-ddns
     restart: unless-stopped
     network_mode: host
