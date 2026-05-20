@@ -95,3 +95,4 @@ configs/frigate/frigate.db*
 # MQTT data directories
 configs/mqtt/mosquitto/data/
 configs/mqtt/mosquitto/log/
+stacks/traefik/config/acme/
