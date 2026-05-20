@@ -154,7 +154,28 @@ dockerhub_hub_digest() {
 # fails because the Hub tags list has unreliable ordering and old re-indexed
 # tags with null digests pollute results.
 dockerhub_latest_version_tag() {
-  local repo="$1"
+  local repo="$1" current_tag="$2"
+
+  # Derive the tag "family" from the current tag so we only compare
+  # like-for-like variants.  Examples:
+  #   "18.2"           -> v_prefix="",  suffix=""         -> plain numeric only
+  #   "2.7.12-alpine"  -> v_prefix="",  suffix="-alpine"  -> *-alpine only
+  #   "v1.10.0"        -> v_prefix="v", suffix=""         -> v-prefixed only
+  local v_prefix="" suffix=""
+  if [[ "$current_tag" =~ ^(v?)([0-9]+(\.[0-9]+)*)(-.+)?$ ]]; then
+    v_prefix="${BASH_REMATCH[1]}"   # "v" or ""
+    suffix="${BASH_REMATCH[4]}"     # e.g. "-alpine" or ""
+  fi
+
+  local escaped_suffix
+  escaped_suffix=$(printf '%s' "$suffix" | sed 's/[.[\*^$(){}+?|]/\\&/g')
+
+  local pattern
+  if [[ -n "$suffix" ]]; then
+    pattern="^${v_prefix}[0-9]+(\.[0-9]+)+(${escaped_suffix})$"
+  else
+    pattern="^${v_prefix}[0-9]+(\.[0-9]+)+$"
+  fi
 
   # Auth token for the registry v2 API
   local token
@@ -163,18 +184,40 @@ dockerhub_latest_version_tag() {
     | jq -r '.token // empty') || { echo ""; return; }
   [[ -z "$token" ]] && { echo ""; return; }
 
-  # Fetch up to 1000 tags (alphabetical, stable, no Hub ordering quirks)
-  local tags_json
-  tags_json=$(curl -sf --max-time "$TIMEOUT" \
-    -H "Authorization: Bearer ${token}" \
-    "https://registry-1.docker.io/v2/${repo}/tags/list?n=1000" \
-    2>/dev/null) || { echo ""; return; }
+  # Paginate through ALL tags following Link headers.
+  # Popular images (postgres, node-red) have thousands of tags; the first
+  # 1000 in alphabetical order are all old versions, so a single-page fetch
+  # misses newer ones. We cap at 10 pages (10 000 tags) as a safety limit.
+  local all_tags="" next_url="https://registry-1.docker.io/v2/${repo}/tags/list?n=1000"
+  local max_pages=10 page=0 hdr_file
+  hdr_file=$(mktemp)
 
-  # Extract tags, filter to clean version strings, return highest by version sort
-  echo "$tags_json" \
-    | jq -r '.tags[]? // empty' \
-    | grep -E '^v?[0-9]+\.[0-9]' \
-    | grep -viE '(alpha|beta|-rc[0-9]|-dev|-nightly|-amd64|-arm|-windows|-nano|-ubuntu|-debug|-rootless|-fips|-ubi|-enterprise|-exemplar|-i386|-ppc)' \
+  while [[ -n "$next_url" && $page -lt $max_pages ]]; do
+    local body link_path
+    body=$(curl -sf --max-time "$TIMEOUT" \
+      -H "Authorization: Bearer ${token}" \
+      -D "$hdr_file" \
+      "$next_url" 2>/dev/null) || break
+
+    all_tags+=$(printf '%s' "$body" | jq -r '.tags[]? // empty')$'\n'
+
+    # Registry v2 Link header format:
+    #   Link: </v2/repo/tags/list?last=XYZ&n=1000>; rel="next"
+    link_path=$(grep -i '^[Ll]ink:' "$hdr_file" \
+      | grep -o '<[^>]*>' | tr -d '<>' | head -1)
+
+    if [[ -n "$link_path" ]]; then
+      next_url="https://registry-1.docker.io${link_path}"
+    else
+      next_url=""
+    fi
+    (( page++ ))
+  done
+  rm -f "$hdr_file"
+
+  printf '%s' "$all_tags" \
+    | grep -E "$pattern" \
+    | grep -viE '(alpha|beta|rc[0-9]|-dev|-nightly)' \
     | sort -V \
     | tail -1
 }
@@ -202,7 +245,12 @@ check_image() {
         latest_digest=$(dockerhub_hub_digest "$repo" "latest" 2>/dev/null || echo "")
         # If digests differ, resolve the human-readable version tag for :latest
         if [[ -n "$latest_digest" && "$latest_digest" != "$current_digest" ]]; then
-          latest_tag=$(dockerhub_latest_version_tag "$repo" 2>/dev/null || echo "")
+          latest_tag=$(dockerhub_latest_version_tag "$repo" "$tag" 2>/dev/null || echo "")
+          # Guard: resolved tag equals pinned tag — digest skew, not a real update
+          if [[ -n "$latest_tag" && "$latest_tag" == "$tag" ]]; then
+            latest_digest="$current_digest"
+            latest_tag=""
+          fi
         fi
       else
         latest_digest="$current_digest"
