@@ -12,6 +12,9 @@
 
 set -euo pipefail
 
+# Load .env if present
+[[ -f "$(dirname "$0")/.env" ]] && source "$(dirname "$0")/.env"
+
 # --------------------------------------------------------------------------- #
 # Defaults
 # --------------------------------------------------------------------------- #
@@ -60,6 +63,97 @@ check_deps() {
 }
 
 # --------------------------------------------------------------------------- #
+# GHCR helpers
+# --------------------------------------------------------------------------- #
+
+# Resolve a Bearer token for a GHCR repo via anonymous token exchange.
+# Works for all public GHCR images without credentials.
+# Note: a PAT cannot be used directly as a Bearer token — it requires
+# Basic auth to exchange for a bearer token, which also needs a username.
+# Anonymous exchange covers all public images so we use it unconditionally.
+ghcr_token() {
+  local repo="$1"
+  curl -sf --max-time "$TIMEOUT" \
+    "https://ghcr.io/token?service=ghcr.io&scope=repository:${repo}:pull" \
+    | jq -r '.token // empty'
+}
+
+# Fetch the manifest digest for a GHCR image:tag.
+# The canonical digest lives in the Docker-Content-Digest response header,
+# not the JSON body (which only has config.digest for single-arch images).
+ghcr_digest() {
+  local repo="$1" tag="$2"
+  local token
+  token=$(ghcr_token "$repo") || { echo ""; return; }
+  [[ -z "$token" ]] && { echo ""; return; }
+
+  curl -sI --max-time "$TIMEOUT" \
+    -H "Authorization: Bearer ${token}" \
+    -H "Accept: application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.oci.image.manifest.v1+json" \
+    "https://ghcr.io/v2/${repo}/manifests/${tag}" \
+    | grep -i '^Docker-Content-Digest:' \
+    | tr -d '\r' \
+    | awk '{print $2}'
+}
+
+# Find the latest version tag for a GHCR image, matching the current tag's
+# family (v-prefix + variant suffix). Paginates via Link headers.
+ghcr_latest_version_tag() {
+  local repo="$1" current_tag="$2"
+
+  local v_prefix="" suffix=""
+  if [[ "$current_tag" =~ ^(v?)([0-9]+(\.[0-9]+)*)(-.+)?$ ]]; then
+    v_prefix="${BASH_REMATCH[1]}"
+    suffix="${BASH_REMATCH[4]}"
+  fi
+
+  local escaped_suffix
+  escaped_suffix=$(printf '%s' "$suffix" | sed 's/[.[\*^$(){}+?|]/\\&/g')
+
+  local pattern
+  if [[ -n "$suffix" ]]; then
+    pattern="^${v_prefix}[0-9]+(\.[0-9]+)+(${escaped_suffix})$"
+  else
+    pattern="^${v_prefix}[0-9]+(\.[0-9]+)+$"
+  fi
+
+  local token
+  token=$(ghcr_token "$repo") || { echo ""; return; }
+  [[ -z "$token" ]] && { echo ""; return; }
+
+  local all_tags="" next_url="https://ghcr.io/v2/${repo}/tags/list?n=1000"
+  local max_pages=10 page=0 hdr_file
+  hdr_file=$(mktemp)
+
+  while [[ -n "$next_url" && $page -lt $max_pages ]]; do
+    local body link_path
+    body=$(curl -sf --max-time "$TIMEOUT" \
+      -H "Authorization: Bearer ${token}" \
+      -D "$hdr_file" \
+      "$next_url" 2>/dev/null) || break
+
+    all_tags+=$(printf '%s' "$body" | jq -r '.tags[]? // empty')$'\n'
+
+    link_path=$(grep -i '^[Ll]ink:' "$hdr_file" \
+      | grep -o '<[^>]*>' | tr -d '<>' | head -1)
+
+    if [[ -n "$link_path" ]]; then
+      next_url="https://ghcr.io${link_path}"
+    else
+      next_url=""
+    fi
+    (( page++ ))
+  done
+  rm -f "$hdr_file"
+
+  printf '%s' "$all_tags" \
+    | grep -E "$pattern" \
+    | grep -viE '(alpha|beta|rc[0-9]|-dev|-nightly)' \
+    | sort -V \
+    | tail -1
+}
+
+# --------------------------------------------------------------------------- #
 # Image parsing
 # --------------------------------------------------------------------------- #
 
@@ -94,29 +188,17 @@ parse_image() {
   local image="$1"
   local registry="" repo="" tag=""
 
-  # ── Step 1: Identify the registry host (if any) ──────────────────────────
-  # A registry hostname is the first slash-delimited segment that either
-  # contains a dot, a colon, or equals 'localhost'.
-  # IMPORTANT: Only check for registry host when the image contains a slash;
-  # otherwise "name:tag" images (e.g. "influxdb:2.7") would be misidentified.
   local first_seg="${image%%/*}"
-  local remainder="${image#*/}"    # everything after the first /
+  local remainder="${image#*/}"
 
   if [[ "$image" == */* ]] && [[ "$first_seg" == *"."* || "$first_seg" == *":"* || "$first_seg" == "localhost" ]]; then
-    # Custom registry — first_seg is hostname (possibly host:port)
     case "$first_seg" in
       ghcr.io)   registry="ghcr"       ;;
       *)         registry="$first_seg" ;;
     esac
-    # remainder is now "org/repo" or "org/repo:tag"
     image="$remainder"
   fi
-  # If no custom registry detected, image is still the full string
-  # and registry will be set to "dockerhub" below.
 
-  # ── Step 2: Split tag from repo ──────────────────────────────────────────
-  # The tag follows the LAST colon, but only if that colon is not inside
-  # a path segment that looks like a port (already stripped above).
   if [[ "$image" == *:* ]]; then
     tag="${image##*:}"
     repo="${image%:*}"
@@ -125,46 +207,32 @@ parse_image() {
     repo="$image"
   fi
 
-  # ── Step 3: Finalise registry & repo ─────────────────────────────────────
   if [[ -z "$registry" ]]; then
     registry="dockerhub"
-    # Official single-name images need the 'library/' prefix for registry API
     [[ "$repo" != */* ]] && repo="library/${repo}"
   fi
 
   echo "$registry" "$repo" "$tag"
 }
-# Fetch the multi-arch manifest list digest for a tag via the Hub API.
-# Keep the full repo path including 'library/' for official images —
-# hub.docker.com/v2/repositories/library/traefik != /repositories/traefik
+
+# --------------------------------------------------------------------------- #
+# Docker Hub helpers
+# --------------------------------------------------------------------------- #
+
 dockerhub_hub_digest() {
   local repo="$1" tag="$2"
   curl -sf --max-time "$TIMEOUT" \
     "https://hub.docker.com/v2/repositories/${repo}/tags/${tag}" \
     2>/dev/null | jq -r '.digest // empty'
 }
-# Find the latest version tag for a Docker Hub image.
-#
-# Uses the registry v2 /tags/list API (not the Hub tags API) which returns
-# tags in stable alphabetical order with no re-indexing surprises.
-# Fetches up to 1000 tags, filters to clean semver-looking tags, and returns
-# the highest by version sort.
-#
-# This intentionally does NOT try to match the :latest digest — that approach
-# fails because the Hub tags list has unreliable ordering and old re-indexed
-# tags with null digests pollute results.
+
 dockerhub_latest_version_tag() {
   local repo="$1" current_tag="$2"
 
-  # Derive the tag "family" from the current tag so we only compare
-  # like-for-like variants.  Examples:
-  #   "18.2"           -> v_prefix="",  suffix=""         -> plain numeric only
-  #   "2.7.12-alpine"  -> v_prefix="",  suffix="-alpine"  -> *-alpine only
-  #   "v1.10.0"        -> v_prefix="v", suffix=""         -> v-prefixed only
   local v_prefix="" suffix=""
   if [[ "$current_tag" =~ ^(v?)([0-9]+(\.[0-9]+)*)(-.+)?$ ]]; then
-    v_prefix="${BASH_REMATCH[1]}"   # "v" or ""
-    suffix="${BASH_REMATCH[4]}"     # e.g. "-alpine" or ""
+    v_prefix="${BASH_REMATCH[1]}"
+    suffix="${BASH_REMATCH[4]}"
   fi
 
   local escaped_suffix
@@ -177,17 +245,12 @@ dockerhub_latest_version_tag() {
     pattern="^${v_prefix}[0-9]+(\.[0-9]+)+$"
   fi
 
-  # Auth token for the registry v2 API
   local token
   token=$(curl -sf --max-time "$TIMEOUT" \
     "https://auth.docker.io/token?service=registry.docker.io&scope=repository:${repo}:pull" \
     | jq -r '.token // empty') || { echo ""; return; }
   [[ -z "$token" ]] && { echo ""; return; }
 
-  # Paginate through ALL tags following Link headers.
-  # Popular images (postgres, node-red) have thousands of tags; the first
-  # 1000 in alphabetical order are all old versions, so a single-page fetch
-  # misses newer ones. We cap at 10 pages (10 000 tags) as a safety limit.
   local all_tags="" next_url="https://registry-1.docker.io/v2/${repo}/tags/list?n=1000"
   local max_pages=10 page=0 hdr_file
   hdr_file=$(mktemp)
@@ -201,8 +264,6 @@ dockerhub_latest_version_tag() {
 
     all_tags+=$(printf '%s' "$body" | jq -r '.tags[]? // empty')$'\n'
 
-    # Registry v2 Link header format:
-    #   Link: </v2/repo/tags/list?last=XYZ&n=1000>; rel="next"
     link_path=$(grep -i '^[Ll]ink:' "$hdr_file" \
       | grep -o '<[^>]*>' | tr -d '<>' | head -1)
 
@@ -222,9 +283,6 @@ dockerhub_latest_version_tag() {
     | tail -1
 }
 
-
-
-
 # --------------------------------------------------------------------------- #
 # Per-image update check
 # --------------------------------------------------------------------------- #
@@ -239,14 +297,11 @@ check_image() {
 
   case "$registry" in
     dockerhub)
-      # Use Hub API for both digests — consistent multi-arch manifest list format
       current_digest=$(dockerhub_hub_digest "$repo" "$tag" 2>/dev/null || echo "")
       if [[ "$tag" != "latest" ]]; then
         latest_digest=$(dockerhub_hub_digest "$repo" "latest" 2>/dev/null || echo "")
-        # If digests differ, resolve the human-readable version tag for :latest
         if [[ -n "$latest_digest" && "$latest_digest" != "$current_digest" ]]; then
           latest_tag=$(dockerhub_latest_version_tag "$repo" "$tag" 2>/dev/null || echo "")
-          # Guard: resolved tag equals pinned tag — digest skew, not a real update
           if [[ -n "$latest_tag" && "$latest_tag" == "$tag" ]]; then
             latest_digest="$current_digest"
             latest_tag=""
@@ -258,8 +313,15 @@ check_image() {
       ;;
     ghcr)
       current_digest=$(ghcr_digest "$repo" "$tag" 2>/dev/null || echo "")
-      if [[ "$tag" != "latest" ]]; then
+      if [[ "$tag" != "latest" && "$tag" != "stable" ]]; then
         latest_digest=$(ghcr_digest "$repo" "latest" 2>/dev/null || echo "")
+        if [[ -n "$latest_digest" && "$latest_digest" != "$current_digest" ]]; then
+          latest_tag=$(ghcr_latest_version_tag "$repo" "$tag" 2>/dev/null || echo "")
+          if [[ -n "$latest_tag" && "$latest_tag" == "$tag" ]]; then
+            latest_digest="$current_digest"
+            latest_tag=""
+          fi
+        fi
       else
         latest_digest="$current_digest"
       fi
@@ -307,7 +369,6 @@ print_report() {
   for row in "$@"; do
     IFS='|' read -r compose_file image_ref registry repo tag status latest_tag <<< "$row"
 
-    # Section header per compose file
     if [[ "$compose_file" != "$last_file" ]]; then
       echo ""
       echo -e "  ${BOLD}${CYAN}$(dirname "$compose_file" | xargs basename)/docker-compose.yml${RESET}"
@@ -377,7 +438,6 @@ main() {
   echo -e "${BOLD}Pattern: ${RESET} ${COMPOSE_GLOB}"
   echo ""
 
-  # Collect all image references, deduplicated per-file
   local -a all_rows=()
   local -A seen=()
   local key row
@@ -394,7 +454,7 @@ main() {
 
   done < <(extract_images "$STACKS_DIR")
 
-  echo -ne "                                                              \r"  # clear progress line
+  echo -ne "                                                              \r"
 
   if [[ ${#all_rows[@]} -eq 0 ]]; then
     echo "No images found. Check --stacks-dir path."
@@ -405,4 +465,3 @@ main() {
 }
 
 main "$@"
-

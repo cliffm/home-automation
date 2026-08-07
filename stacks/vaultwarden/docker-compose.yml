@@ -1,6 +1,6 @@
 services:
   vaultwarden:
-    image: vaultwarden/server:1.36.0-alpine
+    image: vaultwarden/server:1.37.1-alpine
     container_name: vaultwarden
     restart: unless-stopped
     env_file:
@@ -9,6 +9,12 @@ services:
       - vaultwarden_data:/data
     networks:
       - traefik
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/alive"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.vaultwarden.rule=Host(`vaultwarden.martin-ohana.com`)"
