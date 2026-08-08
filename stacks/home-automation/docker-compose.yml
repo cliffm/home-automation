@@ -304,6 +304,8 @@ services:
       - TZ=${TIMEZONE:-America/New_York}
       - NANIT_RTMP_ADDR=${NANIT_RTMP_ADDR:-192.168.1.85:1935}
       - NANIT_LOG_LEVEL=${NANIT_LOG_LEVEL:-info}
+      - NANIT_EMAIL=${NANIT_EMAIL}
+      - NANIT_PASSWORD=${NANIT_PASSWORD}
     logging:
       driver: json-file
       options:
