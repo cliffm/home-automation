@@ -14,7 +14,7 @@ networks:
 services:
   go2rtc:
     container_name: go2rtc
-    image: alexxit/go2rtc:1.9.14
+    image: alexxit/go2rtc:1.9.15
     restart: unless-stopped
     volumes:
       - go2rtc_config:/config
