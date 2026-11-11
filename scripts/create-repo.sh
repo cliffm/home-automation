@@ -56,13 +56,12 @@ print_status "Creating directory structure..."
 
 # Create main directories
 mkdir -p docs/services
-mkdir -p stacks/{home-automation,frigate,watchtower,monitoring,networking}
-mkdir -p configs/{home-assistant,node-red,frigate,mqtt,nginx,grafana}
+mkdir -p stacks/{home-automation,frigate,watchtower,networking}
+mkdir -p configs/{home-assistant,node-red,frigate,mqtt,nginx}
 mkdir -p configs/home-assistant/{packages,custom_components}
 mkdir -p configs/node-red/lib/flows
 mkdir -p configs/frigate/models
 mkdir -p configs/nginx/{sites-available,ssl}
-mkdir -p configs/grafana/{dashboards,provisioning/datasources,provisioning/dashboards}
 mkdir -p scripts/migration
 mkdir -p backups
 mkdir -p templates/service-configs

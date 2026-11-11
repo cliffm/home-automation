@@ -3,7 +3,7 @@
 # Usage: manage-stacks.sh [start|stop|restart|status] [stack_name]
 #
 # Stacks are started/stopped in dependency order:
-#   Start order: portainer → traefik → monitoring → home-automation → frigate → watchtower
+#   Start order: portainer → traefik → home-automation → frigate → watchtower
 #   Stop order:  reverse of start
 
 STACKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../stacks" && pwd)"
@@ -12,7 +12,6 @@ STACKS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../stacks" && pwd)"
 ORDERED_STACKS=(
     portainer
     traefik
-    monitoring
     home-automation
     frigate
     watchtower
@@ -153,7 +152,7 @@ Available stacks:
 Examples:
   $(basename "$0") start                  # Start all stacks
   $(basename "$0") stop home-automation   # Stop only home-automation
-  $(basename "$0") restart monitoring     # Restart monitoring stack
+  $(basename "$0") restart frigate        # Restart frigate stack
   $(basename "$0") status                 # Show status of all stacks
 
 Stacks directory: ${STACKS_DIR}

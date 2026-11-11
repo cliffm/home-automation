@@ -6,7 +6,7 @@ x-logging: &default-logging
 
 networks:
   home_automation:
-    # Explicit name: the frigate and monitoring stacks attach to this network
+    # Explicit name: the frigate stack attaches to this network
     name: home-automation_home_automation
     driver: bridge
     ipam:
