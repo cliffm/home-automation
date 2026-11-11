@@ -211,6 +211,9 @@ services:
       - node_red_data:/data
       - ../../configs/home-assistant:/config:ro
       - /etc/localtime:/etc/localtime:ro
+    ports:
+      # LAN devices (dog-fed display, etc.) call http-in endpoints directly by IP
+      - "1880:1880"
     networks:
       - home_automation
       - traefik
