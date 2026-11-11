@@ -1,12 +1,18 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   traefik:
     container_name: traefik
     image: traefik:v3.7.18
     restart: unless-stopped
+    logging: *default-logging
     ports:
-      - "80:80" # HTTP (redirects to HTTPS)
+      - "80:80" # HTTP (redirected to HTTPS at the entrypoint, see traefik.yml)
       - "443:443" # HTTPS
-      - "8080:8080" # Traefik Dashboard (internal only)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
@@ -17,17 +23,21 @@ services:
       - TZ=${TIMEZONE:-America/New_York}
     networks:
       - traefik
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     labels:
       - "traefik.enable=true"
+      # Dashboard: HTTPS only, LAN only
       - "traefik.http.routers.traefik.rule=Host(`traefik.martin-ohana.com`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.tls=true"
       - "traefik.http.routers.traefik.tls.certresolver=cloudflare"
+      - "traefik.http.routers.traefik.middlewares=local-only@file"
       - "traefik.http.routers.traefik.service=api@internal"
-      # Global redirect to HTTPS
-      - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)"
-      - "traefik.http.routers.http-catchall.entrypoints=web"
-      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
       - "com.centurylinklabs.watchtower.enable=true"
 
 volumes:

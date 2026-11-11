@@ -1,8 +1,15 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   watchtower:
     container_name: watchtower
-    image: containrrr/watchtower:latest
+    image: containrrr/watchtower:1.7.1
     restart: unless-stopped
+    logging: *default-logging
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
@@ -31,7 +38,7 @@ services:
       # Rolling restart (update one at a time)
       - WATCHTOWER_ROLLING_RESTART=true
     healthcheck:
-      test: ["CMD", "/watchtower", "--help"]
+      test: ["CMD", "/watchtower", "--health-check"]
       interval: 30s
       timeout: 10s
       retries: 3

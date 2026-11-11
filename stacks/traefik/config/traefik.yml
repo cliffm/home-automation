@@ -1,12 +1,18 @@
 # Traefik Configuration File - /home/cliffm/home-automation/stacks/traefik/config/traefik.yml
 global:
   checkNewVersion: false
-  sendAnonymousUsage: true
+  sendAnonymousUsage: false
 
 # Entry Points
 entryPoints:
   web:
     address: ":80"
+    # Redirect all HTTP to HTTPS
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
   websecure:
     address: ":443"
 
@@ -34,9 +40,12 @@ certificatesResolvers:
           - "8.8.8.8:53"
 
 # API and Dashboard
+# Served only through the traefik.martin-ohana.com router (local-only)
 api:
   dashboard: true
-  insecure: true # Only for internal access
+
+# Used by the container healthcheck (internal :8080, not published)
+ping: {}
 
 # Logging
 log:

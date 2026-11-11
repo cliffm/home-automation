@@ -132,11 +132,11 @@ docker compose ps
 curl -f http://localhost:8123/manifest.json && echo "✅ HA OK"
 
 # Check Node-RED is accessible
-curl -f http://localhost:1880/ && echo "✅ Node-RED OK"
+docker exec node-red curl -fs http://localhost:1880/ >/dev/null && echo "✅ Node-RED OK"
 
 # Check MQTT is working
 docker exec mosquitto mosquitto_pub -h localhost -t test -m "restore test" && echo "✅ MQTT OK"
 
 # Check Z-Wave devices
-# Access http://ha-server2:8091 and verify devices are visible
+# Access https://zwavejs.martin-ohana.com and verify devices are visible
 ```

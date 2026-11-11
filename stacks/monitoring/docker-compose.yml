@@ -1,8 +1,15 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   influxdb:
     image: influxdb:2.9.1-alpine
     container_name: influxdb
     restart: unless-stopped
+    logging: *default-logging
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
@@ -19,17 +26,23 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.influxdb.rule=Host(`influxdb.martin-ohana.com`)"
+      - "traefik.http.routers.influxdb.entrypoints=websecure"
       - "traefik.http.routers.influxdb.tls=true"
       - "traefik.http.routers.influxdb.tls.certresolver=cloudflare"
       - "traefik.http.routers.influxdb.middlewares=local-only@file"
       - "traefik.http.services.influxdb.loadbalancer.server.port=8086"
-    ports:
-      - "8086:8086"
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   grafana:
     image: grafana/grafana:13.3.1
     container_name: grafana
     restart: unless-stopped
+    logging: *default-logging
     user: "472:472"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
@@ -46,10 +59,17 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.grafana.rule=Host(`grafana.martin-ohana.com`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
       - "traefik.http.routers.grafana.tls=true"
       - "traefik.http.routers.grafana.tls.certresolver=cloudflare"
       - "traefik.http.routers.grafana.middlewares=local-only@file"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   telegraf:
     build:
@@ -58,6 +78,7 @@ services:
     container_name: telegraf
     hostname: ha-server2
     restart: unless-stopped
+    logging: *default-logging
     user: telegraf:119
     command: ["--config", "/etc/telegraf/telegraf.conf"]
     environment:
@@ -70,26 +91,27 @@ services:
       - PIHOLE_PASSWORD=${PIHOLE_PASSWORD}
       - MQTT_PASSWORD=${MQTT_PASSWORD}
     volumes:
-      - /home/cliffm/home-automation/configs/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ../../configs/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc:/host/etc:ro
       - /var/run/utmp:/var/run/utmp:ro
       - /home/cliffm/.ssh/id_rsa_monitoring:/etc/telegraf/keys/id_rsa_monitoring:ro
-      - /home/cliffm/home-automation/configs/telegraf/ssh_config_telegraf:/etc/ssh/ssh_config:ro
+      - ../../configs/telegraf/ssh_config_telegraf:/etc/ssh/ssh_config:ro
     networks:
       - monitoring
       - traefik
       - home_automation
-    privileged: true
     depends_on:
-      - influxdb
+      influxdb:
+        condition: service_healthy
 
   node_exporter:
     image: prom/node-exporter:v1.12.1
     container_name: node_exporter
     restart: unless-stopped
+    logging: *default-logging
     command:
       - '--path.procfs=/host/proc'
       - '--path.rootfs=/rootfs'
@@ -101,8 +123,6 @@ services:
       - /:/rootfs:ro
     networks:
       - monitoring
-    ports:
-      - "9100:9100"
 
 networks:
   monitoring:

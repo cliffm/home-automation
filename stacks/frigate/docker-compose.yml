@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 networks:
   frigate_network:
     driver: bridge
@@ -16,13 +22,15 @@ services:
     container_name: go2rtc
     image: alexxit/go2rtc:1.9.15
     restart: unless-stopped
+    logging: *default-logging
     volumes:
       - go2rtc_config:/config
       - /etc/localtime:/etc/localtime:ro
     networks:
       - frigate_network
     ports:
-      - "1984:1984"
+      # go2rtc API/UI has no auth: host-only. Use an SSH tunnel to reach it.
+      - "127.0.0.1:1984:1984"
       - "8554:8554"
       - "8555:8555/tcp"
       - "8555:8555/udp"
@@ -41,7 +49,10 @@ services:
     container_name: frigate
     image: ghcr.io/blakeblackshear/frigate:0.17.2
     restart: unless-stopped
-    privileged: true
+    logging: *default-logging
+    # CAP_PERFMON lets intel_gpu_top report GPU stats without privileged mode
+    cap_add:
+      - PERFMON
     shm_size: '2g'
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
@@ -58,12 +69,13 @@ services:
       - home_automation
       - traefik
     ports:
-      - "5000:5000"
+      # 5000 (unauthenticated) stays internal: Traefik and Node-RED reach it
+      # over the Docker networks. 8971 is the authenticated UI/API.
       - "8971:8971"
     environment:
       - TZ=${TIMEZONE:-America/New_York}
-      - FRIGATE_MQTT_USER=${FRIGATE_MQTT_USER:-mqtt_user}
-      - FRIGATE_MQTT_PASSWORD=${FRIGATE_MQTT_PASSWORD:-SiKjY6w2MNLLJpwK7iu7}
+      - FRIGATE_MQTT_USER=${FRIGATE_MQTT_USER:?set FRIGATE_MQTT_USER in .env}
+      - FRIGATE_MQTT_PASSWORD=${FRIGATE_MQTT_PASSWORD:?set FRIGATE_MQTT_PASSWORD in .env}
     depends_on:
       go2rtc:
         condition: service_healthy

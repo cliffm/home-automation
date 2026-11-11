@@ -1,8 +1,15 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   vaultwarden:
     image: vaultwarden/server:1.37.5-alpine
     container_name: vaultwarden
     restart: unless-stopped
+    logging: *default-logging
     env_file:
       - .env
     volumes:
@@ -20,6 +27,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.vaultwarden.rule=Host(`vaultwarden.martin-ohana.com`)"
       - "traefik.http.routers.vaultwarden.entrypoints=websecure"
+      - "traefik.http.routers.vaultwarden.tls=true"
       - "traefik.http.routers.vaultwarden.tls.certresolver=cloudflare"
       - "traefik.http.routers.vaultwarden.service=vaultwarden"
       - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
