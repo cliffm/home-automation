@@ -91,6 +91,11 @@ configs/home-assistant/www/
 
 # Frigate specific  
 configs/frigate/frigate.db*
+# Runtime files Frigate writes next to its config (only config.yml is tracked)
+stacks/frigate/config/.runtime_state*
+
+# Python
+__pycache__/
 
 # MQTT data directories
 configs/mqtt/mosquitto/data/
