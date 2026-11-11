@@ -27,7 +27,7 @@ services:
       - "8086:8086"
 
   grafana:
-    image: grafana/grafana:13.2.4
+    image: grafana/grafana:13.3.1
     container_name: grafana
     restart: unless-stopped
     user: "472:472"

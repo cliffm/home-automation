@@ -44,7 +44,7 @@ services:
   # pgAdmin for PostgreSQL Management
   pgadmin:
     container_name: pgadmin
-    image: dpage/pgadmin4:9.17
+    image: dpage/pgadmin4:9.19.0
     restart: unless-stopped
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@martin-ohana.com}
@@ -82,7 +82,7 @@ services:
   # Using network_mode: host for full Bluetooth/mDNS/Thread access
   homeassistant:
     container_name: home-assistant
-    image: ghcr.io/home-assistant/home-assistant:2026.10.4
+    image: ghcr.io/home-assistant/home-assistant:2026.11.1
     privileged: true
     network_mode: host
     restart: unless-stopped
@@ -117,7 +117,7 @@ services:
   # ZWave-JS-UI with Traefik labels
   zwave-js-ui:
     container_name: zwave-js-ui
-    image: zwavejs/zwave-js-ui:11.25.2
+    image: zwavejs/zwave-js-ui:11.26.2
     restart: unless-stopped
     tty: true
     stop_signal: SIGINT
