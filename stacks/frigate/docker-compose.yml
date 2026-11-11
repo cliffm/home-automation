@@ -18,33 +18,6 @@ networks:
     name: traefik
 
 services:
-  go2rtc:
-    container_name: go2rtc
-    image: alexxit/go2rtc:1.9.15
-    restart: unless-stopped
-    logging: *default-logging
-    volumes:
-      - go2rtc_config:/config
-      - /etc/localtime:/etc/localtime:ro
-    networks:
-      - frigate_network
-    ports:
-      # go2rtc API/UI has no auth: host-only. Use an SSH tunnel to reach it.
-      - "127.0.0.1:1984:1984"
-      - "8554:8554"
-      - "8555:8555/tcp"
-      - "8555:8555/udp"
-    environment:
-      - TZ=${TIMEZONE:-America/New_York}
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:1984/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-
   frigate:
     container_name: frigate
     image: ghcr.io/blakeblackshear/frigate:0.17.2
@@ -57,7 +30,10 @@ services:
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
     volumes:
+      # State (db, model cache, JWT secret) lives in the volume; the config
+      # file itself is the repo copy, found via CONFIG_FILE below.
       - frigate_config:/config
+      - ./config:/repo-config
       - frigate_media:/media/frigate
       - /etc/localtime:/etc/localtime:ro
       - type: tmpfs
@@ -72,13 +48,18 @@ services:
       # 5000 (unauthenticated) stays internal: Traefik and Node-RED reach it
       # over the Docker networks. 8971 is the authenticated UI/API.
       - "8971:8971"
+      # WebRTC for live view (Frigate's embedded go2rtc). RTSP 8554 stays internal.
+      - "8555:8555/tcp"
+      - "8555:8555/udp"
     environment:
       - TZ=${TIMEZONE:-America/New_York}
+      - CONFIG_FILE=/repo-config/config.yml
       - FRIGATE_MQTT_USER=${FRIGATE_MQTT_USER:?set FRIGATE_MQTT_USER in .env}
       - FRIGATE_MQTT_PASSWORD=${FRIGATE_MQTT_PASSWORD:?set FRIGATE_MQTT_PASSWORD in .env}
-    depends_on:
-      go2rtc:
-        condition: service_healthy
+      - FRIGATE_RTSP_DOORBELL=${FRIGATE_RTSP_DOORBELL:?set FRIGATE_RTSP_DOORBELL in .env}
+      - FRIGATE_RTSP_DOORBELL_HIGH=${FRIGATE_RTSP_DOORBELL_HIGH:?set FRIGATE_RTSP_DOORBELL_HIGH in .env}
+      - FRIGATE_RTSP_FRONT_DOOR=${FRIGATE_RTSP_FRONT_DOOR:?set FRIGATE_RTSP_FRONT_DOOR in .env}
+      - FRIGATE_RTSP_FRONT_DOOR_HIGH=${FRIGATE_RTSP_FRONT_DOOR_HIGH:?set FRIGATE_RTSP_FRONT_DOOR_HIGH in .env}
     healthcheck:
       test: ["CMD-SHELL", "pgrep -f 'ffmpeg' > /dev/null && pgrep -f 'frigate' > /dev/null"]
       interval: 30s
@@ -100,6 +81,4 @@ volumes:
   frigate_config:
     driver: local
   frigate_media:
-    driver: local
-  go2rtc_config:
     driver: local

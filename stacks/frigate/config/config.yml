@@ -1,0 +1,190 @@
+# yaml-language-server: $schema=http://ha-server2:5000/api/config/schema.json
+#
+# This is the live Frigate config: the container reads and writes this file
+# (CONFIG_FILE=/repo-config/config.yml). Secrets come from stacks/frigate/.env.
+
+# go2rtc (embedded in Frigate) - restreams the cameras for detect/record/live
+go2rtc:
+  webrtc:
+    candidates:
+      - 192.168.1.146:8555
+      - stun:8555
+  streams:
+    # URLs live in .env (the tokens are credentials)
+    doorbell:
+      - "{FRIGATE_RTSP_DOORBELL}"
+    doorbell_hd:
+      - "{FRIGATE_RTSP_DOORBELL_HIGH}"
+    front_door:
+      - "{FRIGATE_RTSP_FRONT_DOOR}"
+    front_door_hd:
+      - "{FRIGATE_RTSP_FRONT_DOOR_HIGH}"
+
+mqtt:
+  host: mosquitto
+  port: 1883
+  topic_prefix: frigate
+  client_id: frigate
+  user: "{FRIGATE_MQTT_USER}"
+  password: "{FRIGATE_MQTT_PASSWORD}"
+
+detectors:
+  ov:
+    type: openvino
+    device: GPU
+model:
+  width: 300
+  height: 300
+  input_tensor: nhwc
+  input_pixel_format: bgr
+  path: /openvino-model/ssdlite_mobilenet_v2.xml
+  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
+
+# Global snapshots config with high quality
+snapshots:
+  enabled: true
+  clean_copy: true
+  timestamp: false
+  bounding_box: false
+  crop: false
+  quality: 95 # High quality but not 100 to avoid issues
+  height: 720 # Good resolution for high quality
+
+objects:
+  track:
+    - person
+    - dog
+  filters:
+    person:
+      min_area: 5000
+      min_score: 0.5
+      threshold: 0.7
+
+ffmpeg:
+  # Frigate defaults plus -an (no audio in recordings)
+  global_args: -hide_banner -loglevel warning -threads 2 -an
+  # VAAPI handles both H.264 (front door) and HEVC (doorbell)
+  hwaccel_args: preset-vaapi
+
+detect:
+  max_disappeared: 10
+
+  enabled: true
+cameras:
+  doorbell:
+    ffmpeg:
+      inputs:
+        # Medium stream for detection, high stream for recordings
+        - path: rtsp://127.0.0.1:8554/doorbell
+          roles:
+            - detect
+        - path: rtsp://127.0.0.1:8554/doorbell_hd
+          roles:
+            - record
+    detect:
+      width: 720
+      height: 960
+      fps: 5
+    motion:
+      # Street, parked cars and tree canopy: ignore motion here
+      mask:
+        - 0,0.18,1,0.18,1,0.61,0,0.61
+    # Increased timeout to ensure high-quality snapshots are captured
+    best_image_timeout: 15
+    objects:
+      track:
+        - person
+        - dog
+      # Drop anything whose feet are in the street band
+      mask: 0,0.18,1,0.18,1,0.61,0,0.61
+      filters:
+        person:
+          min_area: 10000
+          max_area: 1000000
+          min_score: 0.5
+          threshold: 0.7
+    snapshots:
+      enabled: true
+      timestamp: false
+      bounding_box: false
+      crop: false
+      quality: 95 # High quality
+      height: 960 # Match new portrait detect resolution
+      retain:
+        default: 14
+    mqtt:
+      enabled: true
+      timestamp: false
+      bounding_box: false
+      crop: false
+      quality: 95 # High quality for MQTT snapshots
+      height: 960 # Consistent with new portrait resolution
+    record:
+      enabled: true
+      continuous:
+        days: 0
+      motion:
+        days: 7
+    # Porch deck: only people/dogs standing here raise an alert
+    zones:
+      porch:
+        coordinates: 0,0.72,0.31,0.775,0.54,0.78,0.86,0.745,1,0.72,1,1,0,1
+        objects:
+          - person
+          - dog
+    review:
+      alerts:
+        required_zones:
+          - porch
+  front_door:
+    ffmpeg:
+      inputs:
+        # Medium stream for detection, high stream for recordings
+        - path: rtsp://127.0.0.1:8554/front_door
+          roles:
+            - detect
+        - path: rtsp://127.0.0.1:8554/front_door_hd
+          roles:
+            - record
+    detect:
+      height: 576
+      width: 1024
+      fps: 5
+    motion:
+      mask:
+        - 439,439,355,0,1024,0,1024,576,686,576,685,472
+        - 258,409,97,0,0,0,0,482,108,390
+    # Increased timeout to ensure high-quality snapshots are captured
+    best_image_timeout: 15
+    objects:
+      track:
+        - person
+        - dog
+    snapshots:
+      enabled: true
+      timestamp: false
+      bounding_box: false
+      crop: false
+      quality: 95 # High quality
+      height: 576 # Match detect resolution
+      retain:
+        default: 14
+    mqtt:
+      enabled: true
+      timestamp: false
+      bounding_box: false
+      crop: false
+      quality: 95 # High quality for MQTT snapshots
+      height: 576 # Consistent resolution
+    record:
+      enabled: true
+      continuous:
+        days: 0
+      motion:
+        days: 7
+version: 0.17-0
+
+semantic_search:
+  enabled: true
+  reindex: false
+  model_size: small
