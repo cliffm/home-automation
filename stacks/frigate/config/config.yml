@@ -12,21 +12,21 @@ go2rtc:
   streams:
     # URLs live in .env (the tokens are credentials)
     doorbell:
-      - "{FRIGATE_RTSP_DOORBELL}"
+      - '{FRIGATE_RTSP_DOORBELL}'
     doorbell_hd:
-      - "{FRIGATE_RTSP_DOORBELL_HIGH}"
+      - '{FRIGATE_RTSP_DOORBELL_HIGH}'
     front_door:
-      - "{FRIGATE_RTSP_FRONT_DOOR}"
+      - '{FRIGATE_RTSP_FRONT_DOOR}'
     front_door_hd:
-      - "{FRIGATE_RTSP_FRONT_DOOR_HIGH}"
+      - '{FRIGATE_RTSP_FRONT_DOOR_HIGH}'
 
 mqtt:
   host: mosquitto
   port: 1883
   topic_prefix: frigate
   client_id: frigate
-  user: "{FRIGATE_MQTT_USER}"
-  password: "{FRIGATE_MQTT_PASSWORD}"
+  user: '{FRIGATE_MQTT_USER}'
+  password: '{FRIGATE_MQTT_PASSWORD}'
 
 detectors:
   ov:
@@ -43,7 +43,6 @@ model:
 # Global snapshots config with high quality
 snapshots:
   enabled: true
-  clean_copy: true
   timestamp: false
   bounding_box: false
   crop: false
@@ -99,15 +98,21 @@ cameras:
     motion:
       # Street, parked cars and tree canopy: ignore motion here
       mask:
-        - 0,0.18,1,0.18,1,0.61,0,0.61
-    # Increased timeout to ensure high-quality snapshots are captured
+        motion_mask_1:
+          friendly_name: Motion Mask 1
+          enabled: true
+          coordinates: 0,0.18,1,0.18,1,0.61,0,0.61
     best_image_timeout: 15
     objects:
       track:
         - person
         - dog
       # Drop anything whose feet are in the street band
-      mask: 0,0.18,1,0.18,1,0.61,0,0.61
+      mask:
+        object_mask_1:
+          friendly_name: Object Mask 1
+          enabled: true
+          coordinates: 0,0.18,1,0.18,1,0.61,0,0.61
       filters:
         person:
           min_area: 10000
@@ -163,9 +168,14 @@ cameras:
       fps: 5
     motion:
       mask:
-        - 439,439,355,0,1024,0,1024,576,686,576,685,472
-        - 258,409,97,0,0,0,0,482,108,390
-    # Increased timeout to ensure high-quality snapshots are captured
+        motion_mask_1:
+          friendly_name: Motion Mask 1
+          enabled: true
+          coordinates: 439,439,355,0,1024,0,1024,576,686,576,685,472
+        motion_mask_2:
+          friendly_name: Motion Mask 2
+          enabled: true
+          coordinates: 258,409,97,0,0,0,0,482,108,390
     best_image_timeout: 15
     objects:
       track:
@@ -193,7 +203,7 @@ cameras:
         days: 0
       motion:
         days: 7
-version: 0.17-0
+version: 0.18-0
 
 semantic_search:
   enabled: true

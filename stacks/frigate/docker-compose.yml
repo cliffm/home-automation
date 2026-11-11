@@ -20,12 +20,9 @@ networks:
 services:
   frigate:
     container_name: frigate
-    image: ghcr.io/blakeblackshear/frigate:0.17.2
+    image: ghcr.io/blakeblackshear/frigate:0.18.2
     restart: unless-stopped
     logging: *default-logging
-    # CAP_PERFMON lets intel_gpu_top report GPU stats without privileged mode
-    cap_add:
-      - PERFMON
     shm_size: '2g'
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
