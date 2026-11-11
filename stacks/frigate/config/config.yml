@@ -63,16 +63,27 @@ objects:
 ffmpeg:
   # Frigate defaults plus -an (no audio in recordings)
   global_args: -hide_banner -loglevel warning -threads 2 -an
-  # VAAPI handles both H.264 (front door) and HEVC (doorbell)
-  hwaccel_args: preset-vaapi
+  # QSV H.264 decode for the front door. preset-vaapi was tried on 2026-11-11
+  # and crashed ffmpeg every few minutes on both cameras ("Failed to sync
+  # surface"), so don't switch back to it.
+  hwaccel_args: preset-intel-qsv-h264
 
 detect:
+  enabled: true
   max_disappeared: 10
 
-  enabled: true
+# Alerts are for people and dogs (Frigate's default is person and car)
+review:
+  alerts:
+    labels:
+      - person
+      - dog
+
 cameras:
   doorbell:
     ffmpeg:
+      # HEVC stream: software decode (cheap at 720x960, and stable)
+      hwaccel_args: ''
       inputs:
         # Medium stream for detection, high stream for recordings
         - path: rtsp://127.0.0.1:8554/doorbell
