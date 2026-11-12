@@ -46,14 +46,14 @@
         "type": "tab",
         "label": "🔒 Locks",
         "disabled": false,
-        "info": "## 🔒 Locks\n\n### Scheduled Nightly Lock (9:00 PM)\nChecks both front and back doors — if closed, locks them.\n\n### Auto-Lock on Door Close\nWhen the front door closes, checks if auto-lock is enabled\n(`input_boolean.front_door_autolock`). If so, locks after a\n5-minute delay.\n\n### Manual Trigger\nInject node to manually fire the lock-check sequence."
+        "info": "## 🔒 Locks\n\n### Scheduled Nightly Lock (9:00 PM)\nChecks both front and back doors — if closed, locks them.\n\n### Auto-Lock on Door Close\nWhen the front door closes, checks if auto-lock is enabled\n(`input_boolean.front_door_auto_lock`). If so, locks after a\n5-minute delay.\n\n### Manual Trigger\nInject node to manually fire the lock-check sequence."
     },
     {
         "id": "presence",
         "type": "tab",
         "label": "📍 Presence",
         "disabled": false,
-        "info": "## 📍 Presence\n\n### Cliff & Alison\nMQTT topics `presence/cliff` and `presence/alison` → updates\nHome Assistant `person.*` entity state (home/away) and\nentity picture (color when home, B&W when away).\n\n### Cameron (Guest Mode)\nReads iCal calendar entries tagged \"Cameron\". If there are 2+\nevents today (indicating a sleepover), sets\n`input_boolean.cameron_mode` on; otherwise turns it off.\nRuns on a schedule and on demand."
+        "info": "## 📍 Presence\n\n### Cliff & Alison\nMQTT topics `presence/cliff` and `presence/alison` → updates\nHome Assistant `person.*` entity state (home/away) and\nentity picture (color when home, B&W when away).\n\n### Cameron (Guest Mode)\nReads iCal calendar entries tagged \"Cameron\". If there are 2+\nevents today (indicating a sleepover), sets\n`input_boolean.cameron_visiting` on; otherwise turns it off.\nRuns on a schedule and on demand."
     },
     {
         "id": "telegram",
@@ -242,13 +242,12 @@
             "1af3bdba838b0922",
             "5dbd9dcb974a1ccc",
             "8bb591fead6818b2",
-            "14a5d4ff75e362d2",
             "7d0ff5becbd4b5c1",
-            "a9f1e8b2c3d45678"
+            "1289d6a3a8f78b85"
         ],
         "x": 34,
         "y": 3219,
-        "w": 952,
+        "w": 892,
         "h": 402
     },
     {
@@ -592,7 +591,7 @@
         "halt_if": "on",
         "halt_if_type": "str",
         "halt_if_compare": "is",
-        "entity_id": "input_boolean.guest_mode",
+        "entity_id": "input_boolean.guests_visiting",
         "state_type": "str",
         "blockInputOverrides": false,
         "outputProperties": [
@@ -668,7 +667,7 @@
         "halt_if": "on",
         "halt_if_type": "str",
         "halt_if_compare": "is",
-        "entity_id": "input_boolean.cameron_mode",
+        "entity_id": "input_boolean.cameron_visiting",
         "state_type": "str",
         "blockInputOverrides": false,
         "outputProperties": [
@@ -4171,7 +4170,7 @@
         "y": 3260,
         "wires": [
             [
-                "14a5d4ff75e362d2"
+                "1289d6a3a8f78b85"
             ],
             []
         ]
@@ -4196,27 +4195,6 @@
         "outputs": 1,
         "x": 510,
         "y": 3400,
-        "wires": [
-            [
-                "a9f1e8b2c3d45678"
-            ]
-        ]
-    },
-    {
-        "id": "a9f1e8b2c3d45678",
-        "type": "function",
-        "z": "lighting",
-        "g": "842393b331c4e5eb",
-        "name": "Before Sunset?",
-        "func": "const haGlobal = global.get(\"homeassistant\");\nconst ha = haGlobal?.homeAssistant;\n\nif (!ha || !ha.states || !ha.states[\"sun.sun\"]) {\n    node.status({ fill: \"yellow\", text: \"HA sun not ready\" });\n    return null;\n}\n\nconst nextSetting = ha.states[\"sun.sun\"].attributes?.next_setting;\nif (!nextSetting) {\n    node.status({ fill: \"yellow\", text: \"No next_setting\" });\n    return null;\n}\n\nconst now = new Date();\nconst sunset = new Date(nextSetting);\n\nif (now < sunset) {\n    node.status({ fill: \"green\", text: \"Before sunset — turning off\" });\n    return msg;\n}\n\nnode.status({ fill: \"blue\", text: \"After sunset — leaving lights alone\" });\nreturn null;\n",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 620,
-        "y": 3460,
         "wires": [
             [
                 "1af3bdba838b0922"
@@ -4346,8 +4324,8 @@
         "blockInputOverrides": false,
         "domain": "light",
         "service": "turn_off",
-        "x": 860,
-        "y": 3460,
+        "x": 800,
+        "y": 3400,
         "wires": [
             []
         ]
@@ -4394,27 +4372,6 @@
         ]
     },
     {
-        "id": "14a5d4ff75e362d2",
-        "type": "function",
-        "z": "lighting",
-        "g": "842393b331c4e5eb",
-        "name": "Within Morning Window?",
-        "func": "const morningStart = flow.get(\"morningStart\");\nif (!morningStart) {\n    node.status({ fill: \"grey\", text: \"No morningStart yet\" });\n    return null;\n}\n\n// Home Assistant global (v0.80+)\nconst haGlobal = global.get(\"homeassistant\");\nconst ha = haGlobal?.homeAssistant;\n\nif (!ha || !ha.states || !ha.states[\"sun.sun\"]) {\n    node.status({ fill: \"yellow\", text: \"HA sun not ready\" });\n    return null;\n}\n\nconst nextSetting = ha.states[\"sun.sun\"].attributes?.next_setting;\nif (!nextSetting) {\n    node.status({ fill: \"yellow\", text: \"No next_setting\" });\n    return null;\n}\n\n// Times\nconst now = new Date();\n\nconst start = new Date();\nconst [h, m] = morningStart.split(\":\").map(Number);\nstart.setHours(h, m, 0, 0);\n\nconst sunset = new Date(nextSetting);\nsunset.setMinutes(sunset.getMinutes() - 30);\n\n// Gate\nif (now >= start && now <= sunset) {\n    node.status({ fill: \"green\", text: \"Within window\" });\n    return msg;\n}\n\nnode.status({ fill: \"blue\", text: \"Outside window\" });\nreturn null;\n",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 210,
-        "y": 3340,
-        "wires": [
-            [
-                "7d0ff5becbd4b5c1"
-            ]
-        ]
-    },
-    {
         "id": "7d0ff5becbd4b5c1",
         "type": "api-current-state",
         "z": "lighting",
@@ -4457,6 +4414,27 @@
             [
                 "2610da95b281f327",
                 "4a762bc49deb1ff4"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "1289d6a3a8f78b85",
+        "type": "time-range-switch",
+        "z": "lighting",
+        "g": "842393b331c4e5eb",
+        "name": "",
+        "lat": "38.8735",
+        "lon": "-77.11819",
+        "startTime": "05:00",
+        "endTime": "sunset",
+        "startOffset": 0,
+        "endOffset": "-30",
+        "x": 220,
+        "y": 3320,
+        "wires": [
+            [
+                "7d0ff5becbd4b5c1"
             ],
             []
         ]
@@ -5849,6 +5827,7 @@
         "id": "freezer_stale_trigger_v2",
         "type": "trigger",
         "z": "fridge_monitor_v2",
+        "d": true,
         "name": "⏱️ 30m stale timer",
         "op1": "",
         "op2": "stale",
@@ -5965,6 +5944,7 @@
         "id": "fridge_stale_trigger_v2",
         "type": "trigger",
         "z": "fridge_monitor_v2",
+        "d": true,
         "name": "⏱️ 30m stale timer",
         "op1": "",
         "op2": "stale",
@@ -6069,7 +6049,7 @@
         "type": "function",
         "z": "seasonal",
         "name": "🎅 Holiday Season?",
-        "func": "const now = new Date();\nconst month = now.getMonth() + 1;\nconst day = now.getDate();\n\n// Configurable via flow context (defaults: Nov 25 – Jan 6)\nconst startMonth = flow.get('holidayStartMonth') || 11;\nconst startDay = flow.get('holidayStartDay') || 25;\nconst endMonth = flow.get('holidayEndMonth') || 1;\nconst endDay = flow.get('holidayEndDay') || 6;\n\nlet isHoliday;\nif (startMonth <= endMonth) {\n    // Range within same year (e.g., Mar 1 – Dec 31)\n    isHoliday = (month > startMonth || (month === startMonth && day >= startDay)) &&\n                (month < endMonth || (month === endMonth && day <= endDay));\n} else {\n    // Range wraps around year end (e.g., Nov 25 – Jan 6)\n    isHoliday = (month > startMonth || (month === startMonth && day >= startDay)) ||\n                (month < endMonth || (month === endMonth && day <= endDay));\n}\n\nmsg.isHoliday = isHoliday;\nreturn msg;",
+        "func": "// Season windows (recalculated every year):\n//   1) Sep 15 - Oct 31\n//   2) Day after Thanksgiving - Jan 6 (wraps the year end)\n\n// \"off\" always passes, so the 2 am shutoff still fires after the last day\nif (msg.payload === 'off') {\n    msg.isHoliday = true;\n    return msg;\n}\n\nconst now = new Date();\nconst year = now.getFullYear();\nconst month = now.getMonth() + 1;   // 1-12\nconst day = now.getDate();\nconst md = month * 100 + day;\n\n// Thanksgiving = 4th Thursday of November\nfunction thanksgivingDay(y) {\n    const firstDow = new Date(y, 10, 1).getDay();   // 0=Sun ... 4=Thu\n    const firstThursday = 1 + ((4 - firstDow + 7) % 7);\n    return firstThursday + 21;\n}\nconst dayAfterThanksgiving = thanksgivingDay(year) + 1;\n\nconst inFall   = md >= 915 && md <= 1031;\nconst inWinter = (month === 11 && day >= dayAfterThanksgiving)\n              || month === 12\n              || (month === 1 && day <= 6);\n\nmsg.isHoliday = inFall || inWinter;\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -7392,7 +7372,7 @@
         "halt_if": "on",
         "halt_if_type": "str",
         "halt_if_compare": "is",
-        "entity_id": "input_boolean.front_door_autolock",
+        "entity_id": "input_boolean.front_door_auto_lock",
         "state_type": "str",
         "blockInputOverrides": false,
         "outputProperties": [
@@ -7681,7 +7661,7 @@
         "areaId": [],
         "deviceId": [],
         "entityId": [
-            "input_boolean.cameron_mode"
+            "input_boolean.cameron_visiting"
         ],
         "labelId": [],
         "data": "",
@@ -7712,7 +7692,7 @@
         "areaId": [],
         "deviceId": [],
         "entityId": [
-            "input_boolean.cameron_mode"
+            "input_boolean.cameron_visiting"
         ],
         "labelId": [],
         "data": "",
@@ -8148,58 +8128,22 @@
         "wires": []
     },
     {
-        "id": "c896f6e3.8df7e8",
-        "type": "http request",
-        "z": "telegram",
-        "name": "Get Telegram Flow",
-        "method": "GET",
-        "ret": "txt",
-        "paytoqs": "ignore",
-        "url": "http://ha-server2:1880/flow/telegram",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [],
-        "x": 290,
-        "y": 600,
-        "wires": [
-            [
-                "bf064e24.6fda9"
-            ]
-        ]
-    },
-    {
-        "id": "bf064e24.6fda9",
-        "type": "json",
-        "z": "telegram",
-        "name": "Convert to JSON",
-        "property": "payload",
-        "action": "",
-        "pretty": false,
-        "x": 290,
-        "y": 660,
-        "wires": [
-            [
-                "66e35199.ae6f6"
-            ]
-        ]
-    },
-    {
         "id": "66e35199.ae6f6",
         "type": "function",
         "z": "telegram",
         "name": "Filter to just \"/help\" command",
-        "func": "function filter(item) {\n    return item.type === \"telegram command\" && item.command === \"/help\";\n}\n\nmsg.payload = msg.payload.nodes.filter(filter);\n\ninfo = msg.payload[0].info;\ninfo = info.replace(/(\\r\\n|\\n|\\r)/gm, \"\\\\n\");\ninfo = info.replace(/\\\"/g, \"\\\\\\\"\");\n\nmsg.payload[0].info = info;\nreturn msg;",
+        "func": "  const help = `*Available Commands:*\n\n  *Locks*\n  /doors - door and lock status for all doors\n\n  /lock <location>\n  /unlock <location>\n  Locks or Unlocks a door lock at named location. Valid entries are \"Front Door\" or \"Back Door\", case insensitive.\n\n  /lockall - Lock all locks\n\n  /nav Provide either GPS coords or Ingress Intel link to have the Tesla navigate\n\n  /help - Show this help`;\n\n  msg.payload = {\n      chatId: msg.originalMessage.chat.id,\n      type: \"message\",\n      content: help,\n      options: { parse_mode: \"Markdown\" }\n  };\n  return msg;",
         "outputs": 1,
+        "timeout": "",
         "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
         "x": 580,
         "y": 600,
         "wires": [
             [
-                "e466fca2.4761b"
+                "bda0d36b.f06aa"
             ]
         ]
     },
@@ -8222,31 +8166,11 @@
         "y": 600,
         "wires": [
             [
-                "c896f6e3.8df7e8"
+                "66e35199.ae6f6"
             ],
             []
         ],
         "info": "*Available Commands:*\n\n*Locks*\n/doors - door and lock status for all doors\n\n/lock <location>\n/unlock <location>\nLocks or Unlocks a door lock at named location. Valid entries are \"Front Door\" or \"Back Door\", case insensitive.\n\n/lockall - Lock all locks\n\n/nav Provide either GPS coords or Ingress Intel link to have the Tesla navigate\n\n/help - Show this help"
-    },
-    {
-        "id": "e466fca2.4761b",
-        "type": "template",
-        "z": "telegram",
-        "name": "",
-        "field": "payload",
-        "fieldType": "msg",
-        "format": "handlebars",
-        "syntax": "mustache",
-        "template": "{\n    \"chatId\": {{originalMessage.chat.id}},\n    \"type\": \"message\",\n    \"content\": \"{{#payload}}{{{info}}}{{/payload}}\",\n    \"options\": {\n        \"parse_mode\": \"Markdown\"\n    }\n}",
-        "output": "json",
-        "x": 755,
-        "y": 600,
-        "wires": [
-            [
-                "bda0d36b.f06aa"
-            ]
-        ],
-        "l": false
     },
     {
         "id": "bda0d36b.f06aa",
@@ -8665,7 +8589,7 @@
         "halt_if": "off",
         "halt_if_type": "str",
         "halt_if_compare": "is",
-        "entity_id": "input_boolean.coffee_made",
+        "entity_id": "input_boolean.coffee_kettle_started_today",
         "state_type": "str",
         "blockInputOverrides": false,
         "outputProperties": [],
@@ -8713,7 +8637,8 @@
         "y": 180,
         "wires": [
             [
-                "62031ba3a94b9697"
+                "62031ba3a94b9697",
+                "b8c191d3abac0be6"
             ]
         ]
     },
@@ -8748,15 +8673,15 @@
         "for": 0,
         "forType": "num",
         "forUnits": "minutes",
-        "x": 660,
-        "y": 340,
+        "x": 700,
+        "y": 320,
         "wires": [
             [
-                "b8c191d3abac0be6",
                 "start_autooff"
             ],
             [
-                "retry_logic"
+                "retry_logic",
+                "start_autooff"
             ]
         ]
     },
@@ -8767,43 +8692,17 @@
         "name": "Retry logic",
         "func": "if (msg.attempt >= 3) return [null, msg]; msg.attempt++; return [msg, null];",
         "outputs": 2,
-        "x": 810,
-        "y": 240,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 830,
+        "y": 260,
         "wires": [
             [
                 "079798048e3bb0dd"
             ],
-            [
-                "notify_failure"
-            ]
-        ]
-    },
-    {
-        "id": "notify_failure",
-        "type": "api-call-service",
-        "z": "morning_routine",
-        "name": "Notify failure",
-        "server": "2e075c78.e96774",
-        "version": 7,
-        "debugenabled": false,
-        "action": "notify.notify",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [],
-        "labelId": [],
-        "data": "{\"title\":\"Kettle automation\",\"message\":\"Failed to confirm kettle ON after retries.\"}",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "notify",
-        "service": "notify",
-        "x": 1010,
-        "y": 240,
-        "wires": [
             []
         ]
     },
@@ -8830,35 +8729,6 @@
             [
                 "e7986c815ddf5aad"
             ]
-        ]
-    },
-    {
-        "id": "notify_autooff",
-        "type": "api-call-service",
-        "z": "morning_routine",
-        "name": "Notify auto-off",
-        "server": "2e075c78.e96774",
-        "version": 7,
-        "debugenabled": false,
-        "action": "notify.notify",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [],
-        "labelId": [],
-        "data": "{\"title\":\"Kettle safety\",\"message\":\"Kettle turned off after 45 minutes.\"}",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "notify",
-        "service": "notify",
-        "x": 1260,
-        "y": 420,
-        "wires": [
-            []
         ]
     },
     {
@@ -8933,8 +8803,8 @@
         "drop": false,
         "allowrate": false,
         "outputs": 1,
-        "x": 420,
-        "y": 340,
+        "x": 620,
+        "y": 260,
         "wires": [
             [
                 "verify_on"
@@ -8966,7 +8836,7 @@
         "blockInputOverrides": true,
         "domain": "switch",
         "service": "turn_on",
-        "x": 440,
+        "x": 420,
         "y": 260,
         "wires": [
             [
@@ -9012,7 +8882,7 @@
         "areaId": [],
         "deviceId": [],
         "entityId": [
-            "input_boolean.coffee_made"
+            "input_boolean.coffee_kettle_started_today"
         ],
         "labelId": [],
         "data": "",
@@ -9043,7 +8913,7 @@
         "areaId": [],
         "deviceId": [],
         "entityId": [
-            "input_boolean.coffee_made"
+            "input_boolean.coffee_kettle_started_today"
         ],
         "labelId": [],
         "data": "",
@@ -9055,8 +8925,8 @@
         "blockInputOverrides": true,
         "domain": "input_boolean",
         "service": "turn_on",
-        "x": 870,
-        "y": 340,
+        "x": 430,
+        "y": 320,
         "wires": [
             []
         ]
@@ -9089,9 +8959,7 @@
         "x": 1050,
         "y": 420,
         "wires": [
-            [
-                "notify_autooff"
-            ]
+            []
         ]
     },
     {

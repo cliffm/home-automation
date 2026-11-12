@@ -207,8 +207,12 @@ services:
       - homeassistant
     restart: unless-stopped
     logging: *default-logging
+    # Flows and settings.js are the repo copies; node_modules, the credential
+    # key and other runtime state stay in the volume.
+    command: ["--settings", "/repo-config/settings.js"]
     volumes:
       - node_red_data:/data
+      - ../../configs/node-red:/repo-config
       - ../../configs/home-assistant:/config:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
@@ -219,6 +223,8 @@ services:
       - traefik
     environment:
       - TZ=${TIMEZONE:-America/New_York}
+      - FLOWS=/repo-config/flows.json
+      - NODE_RED_ADMIN_HASH=${NODE_RED_ADMIN_HASH:?set in .env}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:1880/"]
       interval: 30s
