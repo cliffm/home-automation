@@ -44,8 +44,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
 
   # pgAdmin for PostgreSQL Management
   pgadmin:
@@ -83,7 +81,6 @@ services:
       - "traefik.http.routers.pgadmin.entrypoints=websecure"
       - "traefik.http.routers.pgadmin.middlewares=local-only@file"
       - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
-      - "com.centurylinklabs.watchtower.enable=true"
 
   # Home Assistant with PostgreSQL dependency
   # Using network_mode: host for full Bluetooth/mDNS/Thread access
@@ -117,7 +114,6 @@ services:
       - "traefik.http.routers.homeassistant.entrypoints=websecure"
       - "traefik.http.routers.homeassistant.middlewares=local-only@file"
       - "traefik.http.services.homeassistant.loadbalancer.server.url=http://${HOST_IP:-192.168.1.85}:8123"
-      - "com.centurylinklabs.watchtower.enable=true"
 
   # ZWave-JS-UI with Traefik labels
   zwave-js-ui:
@@ -166,7 +162,6 @@ services:
       - "traefik.http.routers.zwavejs.entrypoints=websecure"
       - "traefik.http.routers.zwavejs.middlewares=local-only@file"
       - "traefik.http.services.zwavejs.loadbalancer.server.port=8091"
-      - "com.centurylinklabs.watchtower.enable=true"
 
   mqtt:
     container_name: mosquitto
@@ -196,8 +191,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
 
   # Node-RED with Traefik labels
   node-red:
@@ -240,7 +233,6 @@ services:
       - "traefik.http.routers.nodered.entrypoints=websecure"
       - "traefik.http.routers.nodered.middlewares=local-only@file"
       - "traefik.http.services.nodered.loadbalancer.server.port=1880"
-      - "com.centurylinklabs.watchtower.enable=true"
 
   esphome:
     image: ghcr.io/esphome/esphome:2026.6.3
@@ -335,8 +327,6 @@ services:
       - NANIT_LOG_LEVEL=${NANIT_LOG_LEVEL:-info}
       - NANIT_EMAIL=${NANIT_EMAIL}
       - NANIT_PASSWORD=${NANIT_PASSWORD}
-    labels:
-      - "com.centurylinklabs.watchtower.enable=false"
 
   # Matter Server for Home Assistant
   matter-server:
@@ -361,8 +351,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
 
 volumes:
   mosquitto_config:

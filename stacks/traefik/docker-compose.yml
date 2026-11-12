@@ -38,7 +38,6 @@ services:
       - "traefik.http.routers.traefik.tls.certresolver=cloudflare"
       - "traefik.http.routers.traefik.middlewares=local-only@file"
       - "traefik.http.routers.traefik.service=api@internal"
-      - "com.centurylinklabs.watchtower.enable=true"
 
 volumes:
   traefik_certificates:

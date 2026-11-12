@@ -8,7 +8,6 @@ This repository contains Docker Compose stacks and configurations for my home au
 - **Node-RED**: Visual automation flows
 - **Frigate**: AI-powered NVR with object detection
 - **MQTT**: Message broker for IoT devices
-- **Watchtower**: Automated container updates
 
 ## 🚀 Quick Start
 

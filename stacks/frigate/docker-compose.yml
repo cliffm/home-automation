@@ -64,7 +64,6 @@ services:
       retries: 5
       start_period: 3m
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.frigate.rule=Host(`frigate.martin-ohana.com`)"
