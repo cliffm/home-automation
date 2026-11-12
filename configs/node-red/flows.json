@@ -11975,263 +11975,6 @@
         ]
     },
     {
-        "id": "50621b9b36fdc110",
-        "type": "trigger-state",
-        "z": "bathroom_lights",
-        "name": "Hall Bathroom Motion Detected",
-        "server": "2e075c78.e96774",
-        "version": 5,
-        "inputs": 1,
-        "outputs": 2,
-        "exposeAsEntityConfig": "",
-        "entities": {
-            "entity": [
-                "binary_sensor.hall_bath_sensor_home_security_motion_detection"
-            ],
-            "substring": [],
-            "regex": []
-        },
-        "debugEnabled": false,
-        "constraints": [
-            {
-                "targetType": "this_entity",
-                "targetValue": "",
-                "propertyType": "current_state",
-                "propertyValue": "new_state.state",
-                "comparatorType": "is",
-                "comparatorValueDatatype": "str",
-                "comparatorValue": "on"
-            }
-        ],
-        "customOutputs": [],
-        "outputInitially": false,
-        "stateType": "str",
-        "enableInput": true,
-        "exposeToHomeAssistant": false,
-        "haConfig": [
-            {
-                "property": "name",
-                "value": ""
-            },
-            {
-                "property": "icon",
-                "value": ""
-            }
-        ],
-        "x": 170,
-        "y": 1660,
-        "wires": [
-            [
-                "a734816982c378bb",
-                "65212f3c01a9f0ae"
-            ],
-            []
-        ]
-    },
-    {
-        "id": "c5d7e8f9a1b2c3d4",
-        "type": "trigger-state",
-        "z": "bathroom_lights",
-        "name": "Hall Bathroom Motion Cleared",
-        "server": "2e075c78.e96774",
-        "version": 5,
-        "inputs": 1,
-        "outputs": 2,
-        "exposeAsEntityConfig": "",
-        "entities": {
-            "entity": [
-                "binary_sensor.hall_bath_sensor_home_security_motion_detection"
-            ],
-            "substring": [],
-            "regex": []
-        },
-        "debugEnabled": false,
-        "constraints": [
-            {
-                "targetType": "this_entity",
-                "targetValue": "",
-                "propertyType": "current_state",
-                "propertyValue": "new_state.state",
-                "comparatorType": "is",
-                "comparatorValueDatatype": "str",
-                "comparatorValue": "off"
-            }
-        ],
-        "customOutputs": [],
-        "outputInitially": false,
-        "stateType": "str",
-        "enableInput": true,
-        "exposeToHomeAssistant": false,
-        "haConfig": [
-            {
-                "property": "name",
-                "value": ""
-            },
-            {
-                "property": "icon",
-                "value": ""
-            }
-        ],
-        "x": 160,
-        "y": 1740,
-        "wires": [
-            [
-                "57d47489e10bf44d",
-                "5eb840fb29bd6127"
-            ],
-            []
-        ]
-    },
-    {
-        "id": "57d47489e10bf44d",
-        "type": "api-call-service",
-        "z": "bathroom_lights",
-        "name": "Turn off Hall Bathroom Lights",
-        "server": "2e075c78.e96774",
-        "version": 7,
-        "debugenabled": false,
-        "action": "light.turn_off",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "light.hall_bath_lights"
-        ],
-        "labelId": [],
-        "data": "",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "light",
-        "service": "turn_off",
-        "x": 540,
-        "y": 1740,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "a734816982c378bb",
-        "type": "api-call-service",
-        "z": "bathroom_lights",
-        "name": "Turn on Hall Bathroom Lights",
-        "server": "2e075c78.e96774",
-        "version": 7,
-        "debugenabled": false,
-        "action": "light.turn_on",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "light.hall_bath_lights"
-        ],
-        "labelId": [],
-        "data": "",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "light",
-        "service": "turn_on",
-        "x": 540,
-        "y": 1660,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "7d575bebbb78d5a0",
-        "type": "api-call-service",
-        "z": "bathroom_lights",
-        "name": "Turn off Hall Bathroom Fan",
-        "server": "2e075c78.e96774",
-        "version": 7,
-        "debugenabled": false,
-        "action": "switch.turn_off",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "switch.hall_bath_fan"
-        ],
-        "labelId": [],
-        "data": "",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "switch",
-        "service": "turn_off",
-        "x": 740,
-        "y": 1780,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "65212f3c01a9f0ae",
-        "type": "api-call-service",
-        "z": "bathroom_lights",
-        "name": "Turn on Hall Bathroom Fan",
-        "server": "2e075c78.e96774",
-        "version": 7,
-        "debugenabled": false,
-        "action": "switch.turn_on",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "switch.hall_bath_fan"
-        ],
-        "labelId": [],
-        "data": "",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "switch",
-        "service": "turn_on",
-        "x": 540,
-        "y": 1700,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "5eb840fb29bd6127",
-        "type": "trigger",
-        "z": "bathroom_lights",
-        "name": "5 min delay",
-        "op1": "",
-        "op2": "1",
-        "op1type": "nul",
-        "op2type": "num",
-        "duration": "5",
-        "extend": false,
-        "overrideDelay": false,
-        "units": "min",
-        "reset": "",
-        "bytopic": "all",
-        "topic": "topic",
-        "outputs": 1,
-        "x": 490,
-        "y": 1780,
-        "wires": [
-            [
-                "7d575bebbb78d5a0"
-            ]
-        ]
-    },
-    {
         "id": "8700b80e.0b0b68",
         "type": "trigger-state",
         "z": "bathroom_lights",
@@ -12575,6 +12318,1033 @@
                 "73e9bb5785e79268"
             ],
             []
+        ]
+    },
+    {
+        "id": "32595c0eea832011",
+        "type": "trigger-state",
+        "z": "bathroom_lights",
+        "name": "Hall Bathroom Motion Detected",
+        "server": "2e075c78.e96774",
+        "version": 5,
+        "inputs": 1,
+        "outputs": 2,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "binary_sensor.hall_bath_sensor_home_security_motion_detection"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "debugEnabled": false,
+        "constraints": [
+            {
+                "targetType": "this_entity",
+                "targetValue": "",
+                "propertyType": "current_state",
+                "propertyValue": "new_state.state",
+                "comparatorType": "is",
+                "comparatorValueDatatype": "str",
+                "comparatorValue": "on"
+            }
+        ],
+        "customOutputs": [],
+        "outputInitially": false,
+        "stateType": "str",
+        "enableInput": true,
+        "exposeToHomeAssistant": false,
+        "haConfig": [
+            {
+                "property": "name",
+                "value": ""
+            },
+            {
+                "property": "icon",
+                "value": ""
+            }
+        ],
+        "x": 130,
+        "y": 1660,
+        "wires": [
+            [
+                "439ce30d430ad668",
+                "b47704176190cff3",
+                "81e3f0ff67f93550"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "2eb8501b99cae138",
+        "type": "time-range-switch",
+        "z": "bathroom_lights",
+        "name": "Day",
+        "lat": "38.873568",
+        "lon": "-77.118037",
+        "startTime": "sunrise",
+        "endTime": "sunset",
+        "startOffset": 0,
+        "endOffset": "00:30:00",
+        "x": 370,
+        "y": 1720,
+        "wires": [
+            [
+                "133c811ec821d188"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "439ce30d430ad668",
+        "type": "time-range-switch",
+        "z": "bathroom_lights",
+        "name": "Evening",
+        "lat": "38.873568",
+        "lon": "-77.118037",
+        "startTime": "sunset",
+        "endTime": "22:59:59",
+        "startOffset": "00:30:01",
+        "endOffset": 0,
+        "x": 380,
+        "y": 1780,
+        "wires": [
+            [
+                "1198c3081669e4c1"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "fafe3535b3002030",
+        "type": "time-range-switch",
+        "z": "bathroom_lights",
+        "name": "Night",
+        "lat": "38.873568",
+        "lon": "-77.118037",
+        "startTime": "23:00",
+        "endTime": "sunrise",
+        "startOffset": 0,
+        "endOffset": 0,
+        "x": 370,
+        "y": 1840,
+        "wires": [
+            [
+                "56a4fdd70d75bacb"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "b47704176190cff3",
+        "type": "trigger",
+        "z": "bathroom_lights",
+        "name": "",
+        "op1": "",
+        "op2": "1",
+        "op1type": "nul",
+        "op2type": "num",
+        "duration": "10",
+        "extend": true,
+        "units": "min",
+        "reset": "",
+        "bytopic": "all",
+        "outputs": 1,
+        "x": 390,
+        "y": 1960,
+        "wires": [
+            [
+                "d93871f4b9bf5d63",
+                "5c857b1de4f6675d"
+            ]
+        ]
+    },
+    {
+        "id": "133c811ec821d188",
+        "type": "change",
+        "z": "bathroom_lights",
+        "name": "100%",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "255",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 530,
+        "y": 1720,
+        "wires": [
+            [
+                "1b94a9de177ff529"
+            ]
+        ]
+    },
+    {
+        "id": "1198c3081669e4c1",
+        "type": "change",
+        "z": "bathroom_lights",
+        "name": "50%",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "128",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 530,
+        "y": 1780,
+        "wires": [
+            [
+                "1b94a9de177ff529"
+            ]
+        ]
+    },
+    {
+        "id": "56a4fdd70d75bacb",
+        "type": "change",
+        "z": "bathroom_lights",
+        "name": "10%",
+        "rules": [
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
+                "to": "25",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 530,
+        "y": 1840,
+        "wires": [
+            [
+                "1b94a9de177ff529"
+            ]
+        ]
+    },
+    {
+        "id": "8192ebde1c364391",
+        "type": "api-call-service",
+        "z": "bathroom_lights",
+        "name": "Turn on Hall Bathroom Lights",
+        "server": "2e075c78.e96774",
+        "version": 7,
+        "debugenabled": false,
+        "action": "light.turn_on",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "light.hall_bath_lights"
+        ],
+        "labelId": [],
+        "data": "",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": false,
+        "domain": "light",
+        "service": "turn_on",
+        "x": 1300,
+        "y": 1720,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b6a435b101032eaf",
+        "type": "switch",
+        "z": "bathroom_lights",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "off",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "on",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 935,
+        "y": 1720,
+        "wires": [
+            [
+                "32439f123c8a38ac"
+            ],
+            [
+                "dcbaf62933ea4521"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "32439f123c8a38ac",
+        "type": "template",
+        "z": "bathroom_lights",
+        "name": "",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{\n    \"data\": {\n        \"brightness\": {{topic}}\n    }\n}",
+        "output": "json",
+        "x": 1075,
+        "y": 1720,
+        "wires": [
+            [
+                "8192ebde1c364391"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "dcbaf62933ea4521",
+        "type": "switch",
+        "z": "bathroom_lights",
+        "name": "",
+        "property": "data.attributes.brightness",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "lt",
+                "v": "topic",
+                "vt": "msg"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 995,
+        "y": 1760,
+        "wires": [
+            [
+                "32439f123c8a38ac"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "0b9dce6f397435cd",
+        "type": "comment",
+        "z": "bathroom_lights",
+        "name": "Set Brightness level, depending on time of day",
+        "info": "",
+        "x": 500,
+        "y": 1680,
+        "wires": []
+    },
+    {
+        "id": "0252edc539f620f4",
+        "type": "comment",
+        "z": "bathroom_lights",
+        "name": "Get Hall Bathroom light dimmer",
+        "info": "",
+        "x": 820,
+        "y": 1680,
+        "wires": []
+    },
+    {
+        "id": "d4f261cc756d64e4",
+        "type": "comment",
+        "z": "bathroom_lights",
+        "name": "Turn it on if it is \"Off\"",
+        "info": "If they are \"Off\", or their Brightness level is lower than the target Brightness, \nset them on and to target Brightness",
+        "x": 1320,
+        "y": 1680,
+        "wires": []
+    },
+    {
+        "id": "0244a8542d8dd4da",
+        "type": "comment",
+        "z": "bathroom_lights",
+        "name": "Or its Brightness level is lower than the target Brightness",
+        "info": "",
+        "x": 1190,
+        "y": 1800,
+        "wires": []
+    },
+    {
+        "id": "4e14571888e36ac3",
+        "type": "api-call-service",
+        "z": "bathroom_lights",
+        "name": "Turn off Hall Bathroom Lights",
+        "server": "2e075c78.e96774",
+        "version": 7,
+        "debugenabled": false,
+        "action": "light.turn_off",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "light.hall_bath_lights"
+        ],
+        "labelId": [],
+        "data": "",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": false,
+        "domain": "light",
+        "service": "turn_off",
+        "x": 1320,
+        "y": 1980,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9b501e43506e4a42",
+        "type": "switch",
+        "z": "bathroom_lights",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "off",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "on",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 1095,
+        "y": 1960,
+        "wires": [
+            [
+                "4e14571888e36ac3",
+                "3f526e1e99449628"
+            ],
+            [
+                "2bb50656d8740dec",
+                "5a3c9ea9a0dee8ba"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "3abf6ca7e7e5f77a",
+        "type": "comment",
+        "z": "bathroom_lights",
+        "name": "Turn lights off after 10 minutes, unless humidity is 5% or more than the average",
+        "info": "",
+        "x": 600,
+        "y": 1920,
+        "wires": []
+    },
+    {
+        "id": "dc00e1c32521e761",
+        "type": "comment",
+        "z": "bathroom_lights",
+        "name": "If humidity is 5% or more than average, measure every minute",
+        "info": "",
+        "x": 840,
+        "y": 2100,
+        "wires": []
+    },
+    {
+        "id": "d66b653d29762c15",
+        "type": "comment",
+        "z": "bathroom_lights",
+        "name": "and turn off when it is below average + 5%",
+        "info": "",
+        "x": 780,
+        "y": 2140,
+        "wires": []
+    },
+    {
+        "id": "d93871f4b9bf5d63",
+        "type": "change",
+        "z": "bathroom_lights",
+        "name": "Reset",
+        "rules": [
+            {
+                "t": "set",
+                "p": "reset",
+                "pt": "msg",
+                "to": "true",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 555,
+        "y": 2040,
+        "wires": [
+            [
+                "2bb50656d8740dec"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "2bb50656d8740dec",
+        "type": "delay",
+        "z": "bathroom_lights",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "1",
+        "timeoutUnits": "minutes",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "outputs": 1,
+        "x": 680,
+        "y": 2040,
+        "wires": [
+            [
+                "5c857b1de4f6675d"
+            ]
+        ]
+    },
+    {
+        "id": "5c857b1de4f6675d",
+        "type": "ha-get-entities",
+        "z": "bathroom_lights",
+        "name": "Get Current and Avg Humidity",
+        "server": "2e075c78.e96774",
+        "version": 1,
+        "rules": [
+            {
+                "property": "entity_id",
+                "logic": "includes",
+                "value": "sensor.hall_bath_sensor_humidity,sensor.hall_bath_hall_bath_sensor_average_humidity",
+                "valueType": "str"
+            }
+        ],
+        "outputType": "array",
+        "outputEmptyResults": false,
+        "outputLocationType": "msg",
+        "outputLocation": "payload",
+        "outputResultsCount": 1,
+        "x": 690,
+        "y": 1960,
+        "wires": [
+            [
+                "554ffa0f9e9897ed"
+            ]
+        ]
+    },
+    {
+        "id": "554ffa0f9e9897ed",
+        "type": "function",
+        "z": "bathroom_lights",
+        "name": "Is shower on?",
+        "func": "const state = (id) => (msg.payload.find(e => e.entity_id === id) || {}).state;\nconst current_humidity = parseFloat(state(\"sensor.hall_bath_sensor_humidity\"));\nconst average_humidity = parseFloat(state(\"sensor.hall_bath_hall_bath_sensor_average_humidity\"));\n\n// Shower counts as \"on\" when humidity is 5% or more above the 24h average.\n// If either reading is missing, treat it as \"off\" so the lights still time out.\nmsg.payload = (current_humidity >= average_humidity + 5.0) ? \"on\" : \"off\";\nmsg.data = { current_humidity, average_humidity };\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 1960,
+        "wires": [
+            [
+                "9b501e43506e4a42"
+            ]
+        ]
+    },
+    {
+        "id": "1b94a9de177ff529",
+        "type": "api-current-state",
+        "z": "bathroom_lights",
+        "name": "Hall Bath Lights",
+        "server": "2e075c78.e96774",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "light.hall_bath_lights",
+        "state_type": "str",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": 0,
+        "forType": "num",
+        "forUnits": "minutes",
+        "x": 770,
+        "y": 1720,
+        "wires": [
+            [
+                "b6a435b101032eaf"
+            ]
+        ]
+    },
+    {
+        "id": "3f526e1e99449628",
+        "type": "api-call-service",
+        "z": "bathroom_lights",
+        "name": "Turn off Hall Bathroom Fan",
+        "server": "2e075c78.e96774",
+        "version": 7,
+        "debugenabled": false,
+        "action": "switch.turn_off",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "switch.hall_bath_fan"
+        ],
+        "labelId": [],
+        "data": "",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": false,
+        "domain": "switch",
+        "service": "turn_off",
+        "x": 1290,
+        "y": 2040,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5a3c9ea9a0dee8ba",
+        "type": "api-call-service",
+        "z": "bathroom_lights",
+        "name": "Turn on Hall Bathroom Fan",
+        "server": "2e075c78.e96774",
+        "version": 7,
+        "debugenabled": false,
+        "action": "switch.turn_on",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "switch.hall_bath_fan"
+        ],
+        "labelId": [],
+        "data": "",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": false,
+        "domain": "switch",
+        "service": "turn_on",
+        "x": 1290,
+        "y": 2100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ee1c5d44f712ddaf",
+        "type": "server-state-changed",
+        "z": "bathroom_lights",
+        "name": "Hall Bath Lights Off",
+        "server": "2e075c78.e96774",
+        "version": 6,
+        "outputs": 2,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "light.hall_bath_lights"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "off",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": 0,
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "string",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 120,
+        "y": 2120,
+        "wires": [
+            [
+                "ef7e018423332c1d"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "ef7e018423332c1d",
+        "type": "ha-get-entities",
+        "z": "bathroom_lights",
+        "name": "Check Hall Bath Lights and Fan",
+        "server": "2e075c78.e96774",
+        "version": 1,
+        "rules": [
+            {
+                "property": "entity_id",
+                "logic": "includes",
+                "value": "light.hall_bath_lights, switch.hall_bath_fan",
+                "valueType": "str"
+            }
+        ],
+        "outputType": "array",
+        "outputEmptyResults": false,
+        "outputLocationType": "msg",
+        "outputLocation": "payload",
+        "outputResultsCount": 1,
+        "x": 390,
+        "y": 2120,
+        "wires": [
+            [
+                "1182a1ce50276f9b"
+            ]
+        ]
+    },
+    {
+        "id": "1182a1ce50276f9b",
+        "type": "function",
+        "z": "bathroom_lights",
+        "name": "Are lights and fan off?",
+        "func": "let light_count = msg.payload.length\n\nlet lights_off_count = msg.payload.filter(light => light.state === 'off').length\n\nmsg.payload = light_count == lights_off_count\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 2180,
+        "wires": [
+            [
+                "bd3d25b0cc249e1e"
+            ]
+        ]
+    },
+    {
+        "id": "bd3d25b0cc249e1e",
+        "type": "switch",
+        "z": "bathroom_lights",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 515,
+        "y": 2180,
+        "wires": [
+            [
+                "d93871f4b9bf5d63"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "642ad6f1c1514d92",
+        "type": "template",
+        "z": "bathroom_lights",
+        "name": "",
+        "field": "__config",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{\n    \"startTime\": \"{{payload}}\"\n}",
+        "output": "json",
+        "x": 265,
+        "y": 1720,
+        "wires": [
+            [
+                "2eb8501b99cae138"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "9104bbb10cfed074",
+        "type": "template",
+        "z": "bathroom_lights",
+        "name": "",
+        "field": "__config",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{\n    \"endTime\": \"{{payload}}\"\n}",
+        "output": "json",
+        "x": 265,
+        "y": 1840,
+        "wires": [
+            [
+                "fafe3535b3002030"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "81e3f0ff67f93550",
+        "type": "subflow:c7fc795b4b70c91a",
+        "z": "bathroom_lights",
+        "name": "",
+        "x": 130,
+        "y": 1780,
+        "wires": [
+            [
+                "642ad6f1c1514d92",
+                "9104bbb10cfed074"
+            ]
+        ]
+    },
+    {
+        "id": "6c19ae3d7524c165",
+        "type": "server-state-changed",
+        "z": "bathroom_lights",
+        "name": "Hall Bath Fan Off",
+        "server": "2e075c78.e96774",
+        "version": 6,
+        "outputs": 2,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "switch.hall_bath_fan"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "off",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "string",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 130,
+        "y": 2180,
+        "wires": [
+            [
+                "ef7e018423332c1d"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "90ea360343dc39cc",
+        "type": "comment",
+        "z": "bathroom_lights",
+        "name": "Turn fan on as soon as humidity is 5% or more above average, then start the 10 minute timer so it gets turned off again",
+        "info": "",
+        "x": 460,
+        "y": 2300,
+        "wires": []
+    },
+    {
+        "id": "b619852cb7bdbb80",
+        "type": "server-state-changed",
+        "z": "bathroom_lights",
+        "name": "Hall Bath Humidity Changed",
+        "server": "2e075c78.e96774",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "sensor.hall_bath_sensor_humidity"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "string",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 150,
+        "y": 2340,
+        "wires": [
+            [
+                "c6ca28131dce819b"
+            ]
+        ]
+    },
+    {
+        "id": "c6ca28131dce819b",
+        "type": "ha-get-entities",
+        "z": "bathroom_lights",
+        "name": "Get Humidity, Avg and Fan",
+        "server": "2e075c78.e96774",
+        "version": 1,
+        "rules": [
+            {
+                "property": "entity_id",
+                "logic": "includes",
+                "value": "sensor.hall_bath_sensor_humidity,sensor.hall_bath_hall_bath_sensor_average_humidity,switch.hall_bath_fan",
+                "valueType": "str"
+            }
+        ],
+        "outputType": "array",
+        "outputEmptyResults": false,
+        "outputLocationType": "msg",
+        "outputLocation": "payload",
+        "outputResultsCount": 1,
+        "x": 420,
+        "y": 2340,
+        "wires": [
+            [
+                "5e6f4ef83f404d2a"
+            ]
+        ]
+    },
+    {
+        "id": "5e6f4ef83f404d2a",
+        "type": "function",
+        "z": "bathroom_lights",
+        "name": "Humidity high and fan off?",
+        "func": "const state = (id) => (msg.payload.find(e => e.entity_id === id) || {}).state;\nconst current_humidity = parseFloat(state(\"sensor.hall_bath_sensor_humidity\"));\nconst average_humidity = parseFloat(state(\"sensor.hall_bath_hall_bath_sensor_average_humidity\"));\n\n// Only act on the transition: humidity is high and the fan is not running yet.\nif (current_humidity >= average_humidity + 5.0 && state(\"switch.hall_bath_fan\") === \"off\") {\n    msg.payload = \"on\";\n    msg.data = { current_humidity, average_humidity };\n    return msg;\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 2340,
+        "wires": [
+            [
+                "5a3c9ea9a0dee8ba",
+                "b47704176190cff3"
+            ]
         ]
     }
 ]
