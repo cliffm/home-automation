@@ -12213,12 +12213,12 @@
         "id": "hb_fan_on_delay_001",
         "type": "trigger",
         "z": "bathroom_lights",
-        "name": "1 min Fan On Delay",
+        "name": "2 min Fan On Delay",
         "op1": "",
         "op2": "1",
         "op1type": "nul",
         "op2type": "num",
-        "duration": "1",
+        "duration": "2",
         "extend": false,
         "overrideDelay": false,
         "units": "min",
@@ -13345,6 +13345,65 @@
                 "5a3c9ea9a0dee8ba",
                 "b47704176190cff3"
             ]
+        ]
+    },
+    {
+        "id": "301f86b0ff2a8197",
+        "type": "server-state-changed",
+        "z": "bathroom_lights",
+        "name": "Half Bath Lights Off",
+        "server": "2e075c78.e96774",
+        "version": 6,
+        "outputs": 2,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "light.half_bath_lights"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "off",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": 0,
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "string",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 170,
+        "y": 1480,
+        "wires": [
+            [
+                "hb_cancel_fan_001"
+            ],
+            []
         ]
     }
 ]
