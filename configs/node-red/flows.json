@@ -7294,7 +7294,8 @@
         "y": 160,
         "wires": [
             [
-                "db743a3b.ca6478"
+                "db743a3b.ca6478",
+                "fdlock_verify_delay"
             ],
             []
         ]
@@ -7815,7 +7816,7 @@
             {
                 "property": "entity_id",
                 "logic": "includes",
-                "value": "lock.front_door,lock.back_door,binary_sensor.front_door_sensor_access_control_window_door_is_open,binary_sensor.back_door_sensor_access_control_window_door_is_open,binary_sensor.backyard_main_gate,binary_sensor.backyard_aux_gate",
+                "value": "lock.front_door,lock.back_door,binary_sensor.front_door_sensor_open,binary_sensor.back_door_sensor_open,binary_sensor.main_gate_sensor_open,binary_sensor.aux_gate_sensor_window_door_is_open",
                 "valueType": "str",
                 "condition": "state_object"
             }
@@ -8361,8 +8362,8 @@
         "id": "3f0ac6a8.3d017a",
         "type": "function",
         "z": "telegram",
-        "name": "",
-        "func": "const chatId =  msg.originalMessage.chat.id;\n\nconst doors = {\n    front: {\n        door: \"unknown\", lock: \"unknown\"\n    },\n    back: {\n        door: \"unknown\", lock: \"unknown\"\n    },\n    backyard_main_gate: \"unknown\",\n    backyard_aux_gate: \"unknown\"\n}\n\nfor (var i=0; i< msg.payload.length; i++) {\n    const friendly_name = msg.payload[i].attributes.friendly_name;\n    const state = msg.payload[i].state;\n    \n    const door_match = friendly_name.match(/^(Front|Back) Door Sensor/);\n    if (door_match) {\n        const door = door_match[1].toLowerCase();\n        let door_state = \"unknown\";\n        if (state === 'off') {\n            door_state = 'closed';\n        }\n        else if (state === 'on') {\n            door_state = 'open'\n        }\n        \n        doors[door].door = door_state;\n        continue;\n    }\n\n    const lock_match = friendly_name.match(/^(Front|Back) Door$/);\n    if (lock_match) {\n        const lock = lock_match[1].toLowerCase();\n        \n        doors[lock].lock = state;\n        continue;\n    }\n    \n    const gate_match = friendly_name.match(/^Backyard (Main|Aux) Gate$/);\n    if (gate_match) {\n        const gate_partial_name = gate_match[1].toLowerCase();\n        const gate_full_name = \"backyard_\" + gate_partial_name + \"_gate\"\n        \n        let gate_state = \"unknown\";\n        if (state === \"off\") {\n            gate_state = \"closed\";\n        }\n        else if (state === \"on\") {\n            gate_state = \"open\"\n        }\n        \n        doors[gate_full_name] = gate_state;\n        continue;\n    }\n}\n\nmsg.payload = {\n    chatId: chatId,\n    type: \"message\",\n    content: \"Front Door is \" + doors.front.door + \" and is \" + doors.front.lock + \"\\n\" + \n             \"Back Door is \" + doors.back.door + \" and is \" + doors.back.lock +\"\\n\" +\n             \"Backyard Main Gate is \" + doors.backyard_main_gate + \"\\n\" +\n             \"Backyard Aux Gate is \" + doors.backyard_aux_gate + \"\\n\"\n};\n\n\nreturn msg;",
+        "name": "Format door status",
+        "func": "const chatId = msg.originalMessage.chat.id;\n\n// Keyed on entity_id (not friendly name) so renames in HA don't break this.\n// Keep in sync with the entity list in the get-entities node feeding this one.\nconst states = {};\nfor (const entity of msg.payload) {\n    states[entity.entity_id] = entity.state;\n}\n\n// Door/gate contact sensors: on = open, off = closed\nconst contact = (entityId) => {\n    const state = states[entityId];\n    if (state === \"on\") return \"open\";\n    if (state === \"off\") return \"closed\";\n    return state || \"unknown\";\n};\n\n// A lock that tried to throw the bolt and couldn't reports \"unknown\" (the front\n// door has to be pushed in for the bolt to engage), so call that out plainly.\nconst lock = (entityId) => {\n    const state = states[entityId];\n    if (!state || state === \"unknown\") return \"NOT locked (lock attempt failed)\";\n    return state;\n};\n\nmsg.payload = {\n    chatId: chatId,\n    type: \"message\",\n    content: \"Front Door is \" + contact(\"binary_sensor.front_door_sensor_open\") + \" and is \" + lock(\"lock.front_door\") + \"\\n\" +\n             \"Back Door is \" + contact(\"binary_sensor.back_door_sensor_open\") + \" and is \" + lock(\"lock.back_door\") + \"\\n\" +\n             \"Backyard Main Gate is \" + contact(\"binary_sensor.main_gate_sensor_open\") + \"\\n\" +\n             \"Backyard Aux Gate is \" + contact(\"binary_sensor.aux_gate_sensor_window_door_is_open\") + \"\\n\"\n};\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -13403,6 +13404,113 @@
             [
                 "hb_cancel_fan_001"
             ],
+            []
+        ]
+    },
+    {
+        "id": "fdlock_verify_comment",
+        "type": "comment",
+        "z": "locks",
+        "name": "Alert if the front door didn't actually lock",
+        "info": "",
+        "x": 1170,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "fdlock_verify_delay",
+        "type": "delay",
+        "z": "locks",
+        "name": "Wait 30s",
+        "pauseType": "delay",
+        "timeout": "30",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1080,
+        "y": 80,
+        "wires": [
+            [
+                "fdlock_verify_state"
+            ]
+        ]
+    },
+    {
+        "id": "fdlock_verify_state",
+        "type": "api-current-state",
+        "z": "locks",
+        "name": "Front Door locked?",
+        "server": "2e075c78.e96774",
+        "version": 3,
+        "outputs": 2,
+        "halt_if": "locked",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "lock.front_door",
+        "state_type": "str",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": 0,
+        "forType": "num",
+        "forUnits": "minutes",
+        "x": 1270,
+        "y": 80,
+        "wires": [
+            [],
+            [
+                "fdlock_alert_fmt"
+            ]
+        ]
+    },
+    {
+        "id": "fdlock_alert_fmt",
+        "type": "function",
+        "z": "locks",
+        "name": "Compose lock failed alert",
+        "func": "// Runs only when lock.front_door is not \"locked\" 30s after a lock attempt.\n// \"unknown\" is what the lock reports when the bolt couldn't throw.\nconst state = msg.payload;\nconst detail = state === \"unknown\" ? \"the bolt didn't engage\" : `lock reports \"${state}\"`;\n\nmsg.payload = {\n    chatId: [\"321474212\", \"247971390\"],\n    type: \"message\",\n    content: `🔓 Front Door did NOT lock (${detail}). Push the door in and lock it by hand.`\n};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1480,
+        "y": 80,
+        "wires": [
+            [
+                "fdlock_alert_send"
+            ]
+        ]
+    },
+    {
+        "id": "fdlock_alert_send",
+        "type": "telegram sender",
+        "z": "locks",
+        "name": "Send Telegram Alert",
+        "bot": "ae47c1e5.81626",
+        "outputs": 1,
+        "x": 1700,
+        "y": 80,
+        "wires": [
             []
         ]
     }
