@@ -101,3 +101,6 @@ __pycache__/
 configs/mqtt/mosquitto/data/
 configs/mqtt/mosquitto/log/
 stacks/traefik/config/acme/
+
+# Frigate runtime lock file for the live config
+stacks/frigate/config/*.lock

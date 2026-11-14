@@ -19,6 +19,10 @@ go2rtc:
       - '{FRIGATE_RTSP_FRONT_DOOR}'
     front_door_hd:
       - '{FRIGATE_RTSP_FRONT_DOOR_HIGH}'
+    driveway:
+      - '{FRIGATE_RTSP_DRIVEWAY}'
+    driveway_hd:
+      - '{FRIGATE_RTSP_DRIVEWAY_HIGH}'
 
 mqtt:
   host: mosquitto
@@ -80,6 +84,8 @@ review:
 
 cameras:
   doorbell:
+    lpr:
+      enabled: false
     ffmpeg:
       # HEVC stream: software decode (cheap at 720x960, and stable)
       hwaccel_args: ''
@@ -153,6 +159,11 @@ cameras:
         required_zones:
           - porch
   front_door:
+    # Looks down from above the door, so faces are not usable here
+    face_recognition:
+      enabled: false
+    lpr:
+      enabled: false
     ffmpeg:
       inputs:
         # Medium stream for detection, high stream for recordings
@@ -203,7 +214,67 @@ cameras:
         days: 0
       motion:
         days: 7
+  driveway:
+    face_recognition:
+      enabled: false
+    lpr:
+      enabled: true
+    ffmpeg:
+      inputs:
+        # The 4K stream does both jobs: at 720p a parked car's plate is only
+        # about 38x20 px, too small to read. Detection scales it to 1080p.
+        # The medium stream (go2rtc "driveway") is used for live view.
+        - path: rtsp://127.0.0.1:8554/driveway_hd
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1920
+      height: 1080
+      fps: 5
+    motion:
+      # Sky, houses opposite, the busy street and the sidewalk: ignore motion here
+      mask:
+        motion_mask_1:
+          friendly_name: Street, sidewalk and above
+          enabled: true
+          coordinates: 0,0,1,0,1,0.46,0.5,0.46,0,0.5
+    objects:
+      track:
+        - car
+      # Drop cars whose wheels are on the street or beyond
+      mask:
+        object_mask_1:
+          friendly_name: Street, sidewalk and above
+          enabled: true
+          coordinates: 0,0,1,0,1,0.47,0.5,0.47,0,0.5
+    snapshots:
+      enabled: true
+      timestamp: false
+      bounding_box: false
+      crop: false
+      quality: 95
+      height: 1080
+      retain:
+        default: 14
+    record:
+      enabled: true
+      continuous:
+        days: 0
+      motion:
+        days: 7
 version: 0.18-0
+
+# Licence plate recognition: reads plates on tracked cars and stores the text
+# on the car object. Only the driveway camera has it switched on.
+lpr:
+  enabled: true
+
+# Face recognition: names a recognised person as the sub_label of the person
+# object. Train faces in the UI under Face Library. The small model runs on CPU.
+face_recognition:
+  enabled: true
+  model_size: small
 
 semantic_search:
   enabled: true
