@@ -269,6 +269,18 @@ version: 0.18-0
 # on the car object. Only the driveway camera has it switched on.
 lpr:
   enabled: true
+  # Cars to label by owner. A reading may differ from an entry by one
+  # character and still match, so list each plate with and without the dash.
+  known_plates:
+    Cliff:
+      - TDE7019
+      - TDE-7019
+    Alison:
+      - TCH6342
+      - TCH-6342
+    'Linda & Spencer':
+      - UBS2894
+      - UBS-2894
 
 # Face recognition: names a recognised person as the sub_label of the person
 # object. Train faces in the UI under Face Library. The small model runs on CPU.
