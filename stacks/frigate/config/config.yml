@@ -232,6 +232,9 @@ cameras:
       width: 1920
       height: 1080
       fps: 5
+      # A parked car is often missed for a few seconds when headlights sweep
+      # over it; don't drop it and start a new event each time (10s, not 2s)
+      max_disappeared: 50
     motion:
       # Sky, houses opposite, the busy street and the sidewalk: ignore motion here
       mask:
@@ -242,6 +245,12 @@ cameras:
     objects:
       track:
         - car
+      # Real cars here score 0.94+; a car half hidden behind another one
+      # flickers in at 0.7-0.8 and made dozens of short events
+      filters:
+        car:
+          min_score: 0.6
+          threshold: 0.85
       # Drop cars whose wheels are on the street or beyond
       mask:
         object_mask_1:
@@ -269,6 +278,11 @@ version: 0.18-0
 # on the car object. Only the driveway camera has it switched on.
 lpr:
   enabled: true
+  # Drop readings that are not plate-shaped: 5-9 capitals/digits/space/dash,
+  # with at least one digit and one letter. Filters out the dealer frame
+  # ("Audi", "AudiArlington"), the state name ("VIRGINIA") and half-plates
+  # ("6342"). Letters-only vanity plates are dropped too.
+  format: '(?=.*\d)(?=.*[A-Z])[A-Z0-9 -]{5,9}'
   # Cars to label by owner. A reading may differ from an entry by one
   # character and still match, so list each plate with and without the dash.
   known_plates:
