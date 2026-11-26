@@ -7,7 +7,7 @@ x-logging: &default-logging
 services:
   traefik:
     container_name: traefik
-    image: traefik:v3.7.18
+    image: traefik:v3.8.0
     restart: unless-stopped
     logging: *default-logging
     ports:

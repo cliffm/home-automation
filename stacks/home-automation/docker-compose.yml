@@ -86,7 +86,7 @@ services:
   # Using network_mode: host for full Bluetooth/mDNS/Thread access
   homeassistant:
     container_name: home-assistant
-    image: ghcr.io/home-assistant/home-assistant:2026.11.1
+    image: ghcr.io/home-assistant/home-assistant:2026.11.3
     privileged: true
     network_mode: host
     restart: unless-stopped
@@ -118,7 +118,7 @@ services:
   # ZWave-JS-UI with Traefik labels
   zwave-js-ui:
     container_name: zwave-js-ui
-    image: zwavejs/zwave-js-ui:11.26.2
+    image: zwavejs/zwave-js-ui:11.27.0
     restart: unless-stopped
     logging: *default-logging
     tty: true
@@ -165,7 +165,7 @@ services:
 
   mqtt:
     container_name: mosquitto
-    image: eclipse-mosquitto:2.1.2-alpine
+    image: eclipse-mosquitto:2.1.4-alpine
     restart: unless-stopped
     logging: *default-logging
     volumes:
@@ -195,7 +195,7 @@ services:
   # Node-RED with Traefik labels
   node-red:
     container_name: node-red
-    image: nodered/node-red:5.0.9
+    image: nodered/node-red:5.0.10
     depends_on:
       - homeassistant
     restart: unless-stopped
@@ -235,7 +235,7 @@ services:
       - "traefik.http.services.nodered.loadbalancer.server.port=1880"
 
   esphome:
-    image: ghcr.io/esphome/esphome:2026.6.3
+    image: ghcr.io/esphome/esphome:2026.11.1
     container_name: esphome
     volumes:
       - esphome_config:/config
@@ -278,7 +278,7 @@ services:
   otbr:
     container_name: otbr
     # No version tags are published for this image, so pin by digest (2.15.3)
-    image: ghcr.io/ownbee/hass-otbr-docker@sha256:0b1fb50d2d41fba288736994c1773a3768dbef24efdf56780d37e28cb08e3b70
+    image: ghcr.io/ownbee/hass-otbr-docker@sha256:70bdba58d5194bebbb66fdb8700e664009f50bd5cd887dec70f9640fafee3797
     restart: unless-stopped
     logging: *default-logging
     privileged: true
