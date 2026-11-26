@@ -300,7 +300,8 @@ services:
       - /dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_b82d1f7d6a12f01192c70a14773d9da9-if00-port0:/dev/ttyUSB0
       - /dev/net/tun:/dev/net/tun
     volumes:
-      - otbr_data:/var/lib/thread
+      # Newer images keep Thread data in /data/thread and symlink /var/lib/thread to it
+      - otbr_data:/data/thread
     healthcheck:
       test: ["CMD", "ot-ctl", "state"]
       interval: 30s
