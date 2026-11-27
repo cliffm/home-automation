@@ -49,6 +49,7 @@ Thumbs.db
 **/*password*
 **/*token*
 **/*secret*
+!configs/home-assistant/secrets.yaml.example
 **/*.pem
 **/*.key
 *.passwd
